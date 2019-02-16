@@ -80,7 +80,7 @@ add_library(
   src/Matcher.cc
   src/Solver.cc
   src/Optimizer.cc
-  src/Viewer.h
+  src/Viewer.cc
 )
 
 target_link_libraries(
