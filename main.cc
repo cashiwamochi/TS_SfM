@@ -3,6 +3,8 @@
 
 #include <opencv2/opencv.hpp>
 
+#include "System.h"
+
 using std::cout;
 using std::endl;
 

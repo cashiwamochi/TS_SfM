@@ -1,3 +1,5 @@
+#pragma once
+
 // #include <Eigen/Core>
 // #include <Eigen/StdVector>
 // #include <Eigen/Geometry>

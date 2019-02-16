@@ -4,7 +4,8 @@ project(ST_SfM)
 
 set(CMAKE_CXX_COMPILER g++)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -O2")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -O2")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++14 -O2")
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
 
@@ -81,6 +82,7 @@ add_library(
   src/Solver.cc
   src/Optimizer.cc
   src/Viewer.cc
+  src/ConfigLoader.cc
 )
 
 target_link_libraries(
