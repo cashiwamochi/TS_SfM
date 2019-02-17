@@ -68,11 +68,10 @@ link_directories(
   ${Open3D_LIBRARY_DIRS}
 )
 
-
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 
 add_library(
-  ${PROJECT_NAME} SHARED
+  ${PROJECT_NAME} STATIC
   src/System.cc
   src/Frame.cc
   src/MapPoint.cc
@@ -97,9 +96,10 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/build/bin)
 add_executable(
   ts_sfm_example
   main.cc
-  )
+)
 
 target_link_libraries(
   ts_sfm_example
+  ${PROJECT_NAME}
   ${OpenCV_LIBRARIES}
-  )
+)

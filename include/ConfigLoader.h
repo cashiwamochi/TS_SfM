@@ -1,14 +1,17 @@
 #pragma once
 
-#include "opencv2/core.hpp"
 #include <iostream>
 #include <string>
+#include <vector>
+
+#include <opencv2/opencv.hpp>
 
 namespace TS_SfM {
 
   struct Config {
-    std::string str_path_to_data; 
+    std::string str_path_to_images; 
     std::pair<int, int> pair_loop_frames;
+    unsigned int n_skip; 
   };
 
   struct Camera {
@@ -19,10 +22,9 @@ namespace TS_SfM {
   };
 
   namespace ConfigLoader {
-
-    Config LoadConfig(const std::string str_config_file);
-    Camera LoadCamera(const std::string str_camera_file);
-  
+    std::pair<Config, Camera> LoadConfig(const std::string str_config_file);
+    std::vector<std::string> readImagesInDir(const std::string& path_to_images);
+    std::vector<cv::Mat> loadImages(const std::vector<std::string>& vstr_image_names);
   }
 
 }
