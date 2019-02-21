@@ -1,4 +1,6 @@
 #include "System.h"
+#include "Frame.h"
+#include "KPExtractor.h"
 
 namespace TS_SfM {
   System::System(const std::string& str_config_file) {
@@ -10,16 +12,25 @@ namespace TS_SfM {
     m_vm_images = ConfigLoader::loadImages(m_vstr_image_names);
 
     if (m_camera.f_cx < 1.0) {
-      m_camera.f_cx *= m_vm_images[0].rows; 
+      m_camera.f_cx *= (float)m_vm_images[0].rows; 
     }
     if (m_camera.f_cy < 1.0) {
-      m_camera.f_cy *= m_vm_images[0].cols; 
+      m_camera.f_cy *= (float)m_vm_images[0].cols; 
     }
 
     showConfig();
+    m_v_frames = std::vector<Frame>((int)m_vm_images.size()); 
   }
 
   System::~System() {
+  };
+
+  void System::run() {
+
+
+
+
+    return;
   };
 
   void System::showConfig() {

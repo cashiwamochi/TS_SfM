@@ -1,5 +1,6 @@
 #include "ConfigLoader.h"
 
+#include <iostream>
 #include <algorithm>
 #include "dirent.h"
 
@@ -36,23 +37,21 @@ std::vector<std::string> ConfigLoader::readImagesInDir(const std::string& str_pa
   std::vector<std::string> vstr_image_names;
   DIR* dp=opendir(str_path_to_images.c_str());
 
-  if (dp!=NULL)
+  if (dp!=nullptr)
   {
     struct dirent* d;
     do{
       d = readdir(dp);
-      if (d!=NULL) {
+      if (d!=nullptr) {
         std::string file_name = d->d_name;
         if (file_name == "." or file_name == "..") continue;
         vstr_image_names.push_back(str_path_to_images +"/"+ file_name);
       }
-    }while(d!=NULL);
+    }while(d!=nullptr);
   }
   closedir(dp);
   
   std::sort(vstr_image_names.begin(), vstr_image_names.end());
-  // for(auto imagename : vstr_image_names)
-    // std::cout << imagename << std::endl;
   return vstr_image_names;
 }
 

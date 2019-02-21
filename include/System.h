@@ -2,10 +2,10 @@
 
 #include "ConfigLoader.h"
 
-#include <opencv2/opencv.hpp>
-
-
 namespace TS_SfM {
+
+  class Frame;
+  class KPExtractor;
 
   class System{
     public:
@@ -13,11 +13,13 @@ namespace TS_SfM {
       ~System();
 
     private:
+      void run();
       void showConfig();
       Config m_config;
       Camera m_camera;
       std::vector<std::string> m_vstr_image_names; 
       std::vector<cv::Mat> m_vm_images; 
+      std::vector<Frame> m_v_frames; 
   
   
   };
