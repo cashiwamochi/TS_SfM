@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ConfigLoader.h"
+#include <memory>
 
 namespace TS_SfM {
 
@@ -17,10 +18,13 @@ namespace TS_SfM {
       void showConfig();
       Config m_config;
       Camera m_camera;
+      unsigned int m_image_width, m_image_height;
       std::vector<std::string> m_vstr_image_names; 
       std::vector<cv::Mat> m_vm_images; 
       std::vector<Frame> m_v_frames; 
   
+
+      std::unique_ptr<KPExtractor> m_p_extractor;
   
   };
 

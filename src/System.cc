@@ -18,8 +18,13 @@ namespace TS_SfM {
       m_camera.f_cy *= (float)m_vm_images[0].cols; 
     }
 
+    m_image_width = m_vm_images[0].cols;
+    m_image_height = m_vm_images[0].rows;
+
     showConfig();
     m_v_frames = std::vector<Frame>((int)m_vm_images.size()); 
+
+    m_p_extractor.reset(new KPExtractor{m_image_width, m_image_height});
   }
 
   System::~System() {
