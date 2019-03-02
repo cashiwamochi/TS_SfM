@@ -24,7 +24,7 @@ namespace TS_SfM {
       std::vector<Frame> m_v_frames; 
   
 
-      std::unique_ptr<KPExtractor> m_p_extractor;
+      std::shared_ptr<KPExtractor> m_p_extractor;
   
   };
 

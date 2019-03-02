@@ -24,7 +24,7 @@ namespace TS_SfM {
     showConfig();
     m_v_frames = std::vector<Frame>((int)m_vm_images.size()); 
 
-    m_p_extractor.reset(new KPExtractor{m_image_width, m_image_height});
+    // m_p_extractor.reset(new KPExtractor{m_image_width, m_image_height});
   }
 
   System::~System() {
