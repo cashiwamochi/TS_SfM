@@ -1,9 +1,12 @@
 #pragma once
 
-#include <Core/Core.h>
-#include <IO/IO.h>
-#include <Visualization/Visualization.h>
 
-#include <Core/Utility/Timer.h>
+#include <Open3D/Open3D.h>
 
-#include <Core/Registration/ColoredICP.h>
+// #include <Core/Core.h>
+// #include <IO/IO.h>
+// #include <Visualization/Visualization.h>
+//
+// #include <Core/Utility/Timer.h>
+//
+// #include <Core/Registration/ColoredICP.h>

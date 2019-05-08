@@ -14,9 +14,9 @@ namespace TS_SfM {
       ~System();
 
     private:
-      void run();
-      void showConfig();
-      Config m_config;
+      void Run();
+      void ShowConfig();
+      SystemConfig m_config;
       Camera m_camera;
       unsigned int m_image_width, m_image_height;
       std::vector<std::string> m_vstr_image_names; 

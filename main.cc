@@ -8,11 +8,11 @@
 using std::cout;
 using std::endl;
 
-void showUsage();
+void ShowUsage();
 
 int main(int argc, char* argv[]) {
   if(argc != 2) {
-    showUsage();
+    ShowUsage();
     return -1;
   }
 
@@ -23,7 +23,7 @@ int main(int argc, char* argv[]) {
 }
 
 
-void showUsage() {
+void ShowUsage() {
   cout << "Usage : this.out [/path/to/config_params.yaml] "
        << endl;
   return;
