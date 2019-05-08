@@ -73,6 +73,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 add_library(
   ${PROJECT_NAME} STATIC
   src/System.cc
+  src/SfM.cc
   src/Frame.cc
   src/MapPoint.cc
   src/Map.cc
@@ -81,6 +82,7 @@ add_library(
   src/Solver.cc
   src/Optimizer.cc
   src/Viewer.cc
+  src/LoopClosure.cc
   src/ConfigLoader.cc
 )
 

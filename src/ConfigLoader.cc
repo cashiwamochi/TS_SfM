@@ -17,8 +17,6 @@ std::pair<SystemConfig, Camera> ConfigLoader::LoadConfig(const std::string str_c
     return pair_config_cam_params;
   }
 
-  // int skip = fs_settings["Config.skip"];
-  // config_params.n_skip = static_cast<unsigned int>(skip);
   // config_params.pair_loop_frames
   //   = std::make_pair(fs_settings["Config.loop_start"],fs_settings["Config.loop_end"]);
 
@@ -72,4 +70,22 @@ std::vector<cv::Mat> ConfigLoader::LoadImages(const std::vector<std::string>& vs
   }
 
   return vm_images;
+}
+
+SfM::SfMConfig LoadSfMConfig(const std::string str_config_file) {
+  cv::FileStorage fs_settings(str_config_file, cv::FileStorage::READ);
+  SfM::SfMConfig sfm_config;
+  sfm_config.track_skip = fs_settings["SfMConfig.track_skip"];
+  sfm_config.reconst_skip = fs_settings["SfMConfig.reconst_skip"];
+
+  return sfm_config;
+}
+
+LoopClosure::LoopConfig LoadLoopConfig(const std::string str_config_file) {
+  cv::FileStorage fs_settings(str_config_file, cv::FileStorage::READ);
+  LoopClosure::LoopConfig lc_config;
+  lc_config.start_id = fs_settings["LoopConfig.start"];
+  lc_config.end_id = fs_settings["LoopConfig.end"];
+
+  return lc_config;
 }
