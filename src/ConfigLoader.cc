@@ -72,16 +72,23 @@ std::vector<cv::Mat> ConfigLoader::LoadImages(const std::vector<std::string>& vs
   return vm_images;
 }
 
-SfM::SfMConfig LoadSfMConfig(const std::string str_config_file) {
+Tracker::TrackerConfig ConfigLoader::LoadTrackerConfig(const std::string str_config_file) {
   cv::FileStorage fs_settings(str_config_file, cv::FileStorage::READ);
-  SfM::SfMConfig sfm_config;
-  sfm_config.track_skip = fs_settings["SfMConfig.track_skip"];
-  sfm_config.reconst_skip = fs_settings["SfMConfig.reconst_skip"];
+  Tracker::TrackerConfig tracker_config;
+  tracker_config.skip = fs_settings["Tracker.skip"];
 
-  return sfm_config;
+  return tracker_config;
 }
 
-LoopClosure::LoopConfig LoadLoopConfig(const std::string str_config_file) {
+Mapper::MapperConfig ConfigLoader::LoadMapperConfig(const std::string str_config_file) {
+  cv::FileStorage fs_settings(str_config_file, cv::FileStorage::READ);
+  Mapper::MapperConfig mapper_config;
+  mapper_config.skip = fs_settings["MapperConfig.skip"];
+
+  return mapper_config;
+}
+
+LoopClosure::LoopConfig ConfigLoader::LoadLoopConfig(const std::string str_config_file) {
   cv::FileStorage fs_settings(str_config_file, cv::FileStorage::READ);
   LoopClosure::LoopConfig lc_config;
   lc_config.start_id = fs_settings["LoopConfig.start"];

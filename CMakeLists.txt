@@ -73,7 +73,8 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 add_library(
   ${PROJECT_NAME} STATIC
   src/System.cc
-  src/SfM.cc
+  src/Tracker.cc
+  src/Mapper.cc
   src/Frame.cc
   src/MapPoint.cc
   src/Map.cc

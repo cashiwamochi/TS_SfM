@@ -5,7 +5,8 @@
 
 #include <opencv2/opencv.hpp>
 
-#include "SfM.h"
+#include "Tracker.h"
+#include "Mapper.h"
 #include "LoopClosure.h"
 
 namespace TS_SfM {
@@ -26,17 +27,12 @@ namespace TS_SfM {
     float f_k3;
   };
 
-  struct LoopConfig {
-    int start;
-    int end;
-  };
-
-
   namespace ConfigLoader {
     std::pair<SystemConfig, Camera> LoadConfig(const std::string str_config_file);
     std::vector<std::string> ReadImagesInDir(const std::string& path_to_images);
     std::vector<cv::Mat> LoadImages(const std::vector<std::string>& vstr_image_names);
-    SfM::SfMConfig LoadSfMConfig(const std::string str_config_file);
+    Tracker::TrackerConfig LoadTrackerConfig(const std::string str_config_file);
+    Mapper::MapperConfig LoadMapperConfig(const std::string str_config_file);
     LoopClosure::LoopConfig LoadLoopConfig(const std::string str_config_file);
   }
 

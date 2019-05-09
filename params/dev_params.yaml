@@ -17,8 +17,8 @@ Camera.k3: 0.0
 Config.path2images: /mnt/akane0/workspace/ts_sfm_ws/test_data/01/images
 
 # frame skip
-SfM.track_skip: 1
-SfM.reconst_skip: 5
+Tracker.skip: 1
+Mapper.skip: 5
 
 # loop closure
 LoopClosure.start: -1

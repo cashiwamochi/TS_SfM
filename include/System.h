@@ -7,6 +7,8 @@ namespace TS_SfM {
 
   class Frame;
   class KPExtractor;
+  class Tracker;
+  class Mapper;
 
   class System{
     public:
@@ -23,8 +25,9 @@ namespace TS_SfM {
       std::vector<cv::Mat> m_vm_images; 
       std::vector<Frame> m_v_frames; 
   
-
       std::shared_ptr<KPExtractor> m_p_extractor;
+      std::unique_ptr<Tracker> m_p_tracker;
+      std::unique_ptr<Mapper> m_p_mapper;
   
   };
 
