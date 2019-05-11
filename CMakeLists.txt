@@ -9,8 +9,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++14 -O2")
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
 
-set(OpenCV_DIR ~/.local/OpenCV401/lib/cmake/opencv4/)
-# set(OpenCV_DIR ~/.local/OpenCV345/share/OpenCV/)
+set(OpenCV_DIR ~/.local/OpenCV410/lib/cmake/opencv4/)
+# set(OpenCV_DIR ~/.local/OpenCV401/lib/cmake/opencv4/)
 find_package(OpenCV REQUIRED)
 IF (OpenCV_FOUND)
   # include_directories(${OpenCV_INCLUDE_DIRS})

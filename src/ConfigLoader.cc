@@ -17,9 +17,6 @@ std::pair<SystemConfig, Camera> ConfigLoader::LoadConfig(const std::string str_c
     return pair_config_cam_params;
   }
 
-  // config_params.pair_loop_frames
-  //   = std::make_pair(fs_settings["Config.loop_start"],fs_settings["Config.loop_end"]);
-
   config_params.str_path_to_images = static_cast<std::string>(fs_settings["Config.path2images"]);
 
   camera_params.f_cx = fs_settings["Camera.cx"];
@@ -95,4 +92,18 @@ LoopClosure::LoopConfig ConfigLoader::LoadLoopConfig(const std::string str_confi
   lc_config.end_id = fs_settings["LoopConfig.end"];
 
   return lc_config;
+}
+
+KPExtractor::ExtractorConfig ConfigLoader::LoadExtractorConfig(const std::string str_config_file) {
+  cv::FileStorage fs_settings(str_config_file, cv::FileStorage::READ);
+  KPExtractor::ExtractorConfig extractor_config;
+
+  extractor_config.str_descriptor = static_cast<std::string>(fs_settings["Extractor.descriptor"]);
+  extractor_config.threshold = static_cast<float>(fs_settings["Extractor.threshold"]);
+  extractor_config.octaves = static_cast<int>(fs_settings["Extractor.octaves"]);
+  extractor_config.octavelayers = static_cast<int>(fs_settings["Extractor.octavelayers"]);
+  extractor_config.grid_width = static_cast<int>(fs_settings["Extractor.grid_width"]);
+  extractor_config.grid_height = static_cast<int>(fs_settings["Extractor.grid_height"]);
+
+  return extractor_config;
 }

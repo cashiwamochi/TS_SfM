@@ -9,13 +9,18 @@ namespace TS_SfM {
 
   class Frame{
     public:
-      Frame(const cv::Mat& m_image, const std::shared_ptr<KPExtractor>& p_extractor);
+      Frame(const int id, const cv::Mat& m_image, const std::shared_ptr<KPExtractor>& p_extractor);
       Frame();
       ~Frame();
 
+      const int m_id;
+      const cv::Mat m_m_image;
+
     private:
-      unsigned int m_id;
-      cv::Mat m_m_image;
+      bool m_is_key;
+      cv::Mat m_m_cTw; // (4 x 4)
+      std::vector<cv::KeyPoint> m_v_kpts;
+      cv::Mat m_m_descriptors;
 
   };
 };

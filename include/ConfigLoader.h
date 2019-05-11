@@ -8,6 +8,7 @@
 #include "Tracker.h"
 #include "Mapper.h"
 #include "LoopClosure.h"
+#include "KPExtractor.h"
 
 namespace TS_SfM {
 
@@ -34,6 +35,7 @@ namespace TS_SfM {
     Tracker::TrackerConfig LoadTrackerConfig(const std::string str_config_file);
     Mapper::MapperConfig LoadMapperConfig(const std::string str_config_file);
     LoopClosure::LoopConfig LoadLoopConfig(const std::string str_config_file);
+    KPExtractor::ExtractorConfig LoadExtractorConfig(const std::string str_config_file);
   }
 
 }

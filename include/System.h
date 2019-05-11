@@ -14,9 +14,9 @@ namespace TS_SfM {
     public:
       System(const std::string& str_config_file);
       ~System();
+      void Run();
 
     private:
-      void Run();
       void ShowConfig();
       SystemConfig m_config;
       Camera m_camera;
@@ -31,4 +31,4 @@ namespace TS_SfM {
   
   };
 
-}// TS_SfM
+} //TS_SfM

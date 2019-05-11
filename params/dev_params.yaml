@@ -1,4 +1,5 @@
 %YAML:1.0
+# YOU MUST GIVE SOME VALUE 
 
 # camera intrinsic params
 Camera.fx: 400.0
@@ -13,13 +14,20 @@ Camera.p1: 0.0
 Camera.p2: 0.0
 Camera.k3: 0.0
 
-
 Config.path2images: /mnt/akane0/workspace/ts_sfm_ws/test_data/01/images
 
 # frame skip
 Tracker.skip: 1
+
 Mapper.skip: 5
 
 # loop closure
 LoopClosure.start: -1
 LoopClosure.end: -1
+
+Extractor.desctiptor: AKAZE # ORB 
+Extractor.threshold: 0.001 # 0,001 is default 
+Extractor.octaves: 4 # 4 is default
+Extractor.octavelayers: 4 # 4 is default
+Extractor.grid_width: 100 # 100 is default
+Extractor.grid_height: 100 # 100 is default
