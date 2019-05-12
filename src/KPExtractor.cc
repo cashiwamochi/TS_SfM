@@ -45,15 +45,28 @@ namespace TS_SfM {
   }
 
   void KPExtractor::DistributeToGrids(const std::vector<cv::KeyPoint>& v_keypoints,
-                         const cv::Mat& vm_descriptors,
-                         std::vector<std::vector<std::vector<cv::KeyPoint>>>& vvv_grid_kpts,
-                         std::vector<std::vector<cv::Mat>>& vvm_descs) 
+                                      const cv::Mat& m_descriptors,
+                                      std::vector<std::vector<std::vector<cv::KeyPoint>>>& vvv_grid_kpts,
+                                      std::vector<std::vector<cv::Mat>>& vvm_descs) 
   {
+    std::vector<KPData> v_kpdata;
+    v_kpdata.reserve(m_descriptors.rows);
+
+    for(int row = 0; row < m_descriptors.rows; row++) {
+      v_kpdata.push_back(KPData(v_keypoints[row], m_descriptors.row(row))); 
+     }
+
+    std::sort(v_kpdata.begin(), v_kpdata.end(), KPData::cmp);
+
+    // for(int i = 0; i < v_kpdata.size(); i++) {
+    //   std::cout << v_kpdata[i].kp.response << std::endl; 
+    // }
+
     vvv_grid_kpts.clear();
     vvm_descs.clear();
 
-    vvv_grid_kpts.resize(5);
-    vvm_descs.resize(5);
+    vvv_grid_kpts.resize(m_num_vertical_grid);
+    vvm_descs.resize(m_num_vertical_grid);
     for(unsigned int i = 0; i < m_num_vertical_grid; i++) {
       vvv_grid_kpts[i].resize(m_num_horizontal_grid);
       vvm_descs[i].resize(m_num_horizontal_grid);

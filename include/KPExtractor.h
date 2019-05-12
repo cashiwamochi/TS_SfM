@@ -24,7 +24,7 @@ namespace TS_SfM {
       ~KPExtractor();
 
     void DistributeToGrids(const std::vector<cv::KeyPoint>& v_keypoints,
-                           const cv::Mat& vm_descriptors,
+                           const cv::Mat& m_descriptors,
                            std::vector<std::vector<std::vector<cv::KeyPoint>>>& vvv_grid_kpts,
                            std::vector<std::vector<cv::Mat>>& vvm_descs);
 
@@ -35,6 +35,23 @@ namespace TS_SfM {
       std::vector< std::vector<std::pair<cv::Point2f, cv::Point2f>>> GetGrids();
 
     private:
+
+      struct KPData {
+        cv::KeyPoint kp;
+        cv::Mat descriptor;
+
+        KPData(cv::KeyPoint _kp, cv::Mat _desc) {
+          kp = _kp;
+          descriptor = _desc;
+        }
+
+        static bool cmp(const KPData &a, const KPData &b)
+        {
+          return a.kp.response > b.kp.response;
+        }
+
+      };
+
 
       std::pair<int, int> GetWhichGrid(const cv::Point2f& pt);
       void SetGrids();
