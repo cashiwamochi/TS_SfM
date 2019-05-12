@@ -26,7 +26,7 @@ LoopClosure.start: -1
 LoopClosure.end: -1
 
 Extractor.desctiptor: AKAZE # ORB 
-Extractor.threshold: 0.001 # 0,001 is default 
+Extractor.threshold: 0.0001 # 0,001 is default 
 Extractor.octaves: 4 # 4 is default
 Extractor.octavelayers: 4 # 4 is default
 Extractor.grid_width: 100 # 100 is default

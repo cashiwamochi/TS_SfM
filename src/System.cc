@@ -53,7 +53,7 @@ namespace TS_SfM {
               << "SfM pipeline starts ...";
 
     for (size_t i = 0; i < m_v_frames.size(); i++) {
-    
+      m_v_frames[i].ShowFeaturePoints();    
     }
 
     std::cout << " Done. " << std::endl;

@@ -12,7 +12,17 @@ namespace TS_SfM {
               << m_m_descriptors.rows
               << std::endl;
 
-    // p_extractor->DistrubuteKP2Grids(m_m_image, m_v_kpts, m_m_descriptors);
+    auto vvpair_grid_corners = p_extractor->GetGrids();
+
+    // for(auto v : vvpair_grid_corners) {
+    //   for(auto p : v) {
+    //     std::cout << p.first.x << ":" << p.first.y << std::endl; 
+    //     std::cout << p.second.x << ":" << p.second.y << std::endl; 
+    //     std::cout << "-----------------------------" << std::endl; 
+    //   } 
+    // }
+
+    // p_extractor->DistrubuteToGrids(m_vvv_grid_kpts, m_vvm_grid_desc);
   }
 
   Frame::Frame()
@@ -22,5 +32,16 @@ namespace TS_SfM {
 
   Frame::~Frame() {
   }
+
+  void Frame::ShowFeaturePoints() {
+    cv::Mat output;
+    cv::drawKeypoints(m_m_image, m_v_kpts, output);
+
+    cv::imshow("test", output);
+    cv::waitKey(0); 
+  
+    return;
+  }
+
 };
 
