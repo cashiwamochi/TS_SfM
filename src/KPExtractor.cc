@@ -44,14 +44,49 @@ namespace TS_SfM {
     return; 
   }
 
-  void DistributeToGrids(const cv::Mat& vm_descriptors,
-                         const std::vector<cv::KeyPoint>& v_keypoints,
+  void KPExtractor::DistributeToGrids(const std::vector<cv::KeyPoint>& v_keypoints,
+                         const cv::Mat& vm_descriptors,
                          std::vector<std::vector<std::vector<cv::KeyPoint>>>& vvv_grid_kpts,
                          std::vector<std::vector<cv::Mat>>& vvm_descs) 
   {
+    vvv_grid_kpts.clear();
+    vvm_descs.clear();
+
+    vvv_grid_kpts.resize(5);
+    vvm_descs.resize(5);
+    for(unsigned int i = 0; i < m_num_vertical_grid; i++) {
+      vvv_grid_kpts[i].resize(m_num_horizontal_grid);
+      vvm_descs[i].resize(m_num_horizontal_grid);
+      for(unsigned int j = 0; j < m_num_horizontal_grid; j++) {
+        vvv_grid_kpts[i][j].clear(); 
+        vvm_descs[i][j].release();
+      }
+    }
+
+    for (cv::KeyPoint kp : v_keypoints) {
+      std::pair<int,int> grid_idx = GetWhichGrid(kp.pt); 
+      vvv_grid_kpts[grid_idx.first][grid_idx.second].push_back(kp);
+    }
   
     
     return;
+  }
+
+  inline std::pair<int, int> KPExtractor::GetWhichGrid(const cv::Point2f& pt) {
+    int horizontal_grid_idx 
+      = static_cast<int>((pt.x - (m_image_width%m_config.grid_width)/2.0)/(float)m_config.grid_width);
+    int vertical_grid_idx 
+      = static_cast<int>((pt.y - (m_image_height%m_config.grid_height)/2.0)/(float)m_config.grid_height);
+
+    if(horizontal_grid_idx == m_num_horizontal_grid) {
+      horizontal_grid_idx = m_num_horizontal_grid - 1;  
+    }
+
+    if(vertical_grid_idx == m_num_vertical_grid) {
+      vertical_grid_idx = m_num_vertical_grid - 1;  
+    }
+
+    return std::make_pair(vertical_grid_idx, horizontal_grid_idx);
   }
 
   void KPExtractor::SetGrids() {

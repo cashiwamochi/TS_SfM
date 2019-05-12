@@ -23,19 +23,20 @@ namespace TS_SfM {
                   const ExtractorConfig& _config);
       ~KPExtractor();
 
-      void DistributeToGrids(const cv::Mat& vm_descriptors,
-                             const std::vector<cv::KeyPoint>& v_keypoints,
-                             std::vector<std::vector<std::vector<cv::KeyPoint>>>& vvv_grid_kpts,
-                             std::vector<std::vector<cv::Mat>>& vvm_descs); 
+    void DistributeToGrids(const std::vector<cv::KeyPoint>& v_keypoints,
+                           const cv::Mat& vm_descriptors,
+                           std::vector<std::vector<std::vector<cv::KeyPoint>>>& vvv_grid_kpts,
+                           std::vector<std::vector<cv::Mat>>& vvm_descs);
 
       void ExtractFeaturePoints(cv::Mat m_input,
-                                             std::vector<cv::KeyPoint>& v_kpts,
-                                             cv::Mat& m_descriptors);
+                                std::vector<cv::KeyPoint>& v_kpts,
+                                cv::Mat& m_descriptors);
 
       std::vector< std::vector<std::pair<cv::Point2f, cv::Point2f>>> GetGrids();
 
     private:
 
+      std::pair<int, int> GetWhichGrid(const cv::Point2f& pt);
       void SetGrids();
 
       const unsigned int m_image_width, m_image_height;
@@ -44,8 +45,6 @@ namespace TS_SfM {
 
       cv::Ptr<cv::Feature2D> m_p_extractor;
 
-      std::vector<std::vector<std::vector<cv::KeyPoint>>> m_vv_grid_kpts;
-      std::vector<std::vector<cv::Mat>> m_vvm_grid_descs;
 
       std::vector<std::vector<std::pair<cv::Point2f,cv::Point2f>>> m_vvpair_grid_corners;
   

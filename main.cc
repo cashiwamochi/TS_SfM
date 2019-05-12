@@ -1,5 +1,4 @@
 #include <iostream>
-#include <string>
 
 #include "System.h"
 
@@ -16,6 +15,8 @@ int main(int argc, char* argv[]) {
 
   const std::string str_config_file = argv[1];
   TS_SfM::System _sfm(str_config_file);
+
+  _sfm.Run();
 
   return 0;
 }

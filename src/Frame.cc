@@ -12,17 +12,18 @@ namespace TS_SfM {
               << m_m_descriptors.rows
               << std::endl;
 
-    auto vvpair_grid_corners = p_extractor->GetGrids();
+    std::vector<std::vector<std::pair<cv::Point2f,cv::Point2f>>> vvpair_grid_corners = p_extractor->GetGrids();
 
-    // for(auto v : vvpair_grid_corners) {
-    //   for(auto p : v) {
-    //     std::cout << p.first.x << ":" << p.first.y << std::endl; 
-    //     std::cout << p.second.x << ":" << p.second.y << std::endl; 
-    //     std::cout << "-----------------------------" << std::endl; 
-    //   } 
-    // }
+    for(auto v : vvpair_grid_corners) {
+      for(auto p : v) {
+        std::cout << p.first.x << ":" << p.first.y << std::endl; 
+        std::cout << p.second.x << ":" << p.second.y << std::endl; 
+        std::cout << "-----------------------------" << std::endl; 
+      } 
+    }
 
-    // p_extractor->DistrubuteToGrids(m_vvv_grid_kpts, m_vvm_grid_desc);
+    p_extractor->DistributeToGrids(m_v_kpts, m_m_descriptors,
+                                   m_vvv_grid_kpts, m_vvm_grid_descs);
   }
 
   Frame::Frame()

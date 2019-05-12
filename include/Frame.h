@@ -24,7 +24,7 @@ namespace TS_SfM {
       std::vector<cv::KeyPoint> m_v_kpts;
       cv::Mat m_m_descriptors;
 
-      std::vector<std::vector<std::vector<cv::KeyPoint>>> m_vv_grid_kpts;
+      std::vector<std::vector<std::vector<cv::KeyPoint>>> m_vvv_grid_kpts;
       std::vector<std::vector<cv::Mat>> m_vvm_grid_descs;
 
   };
