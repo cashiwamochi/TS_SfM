@@ -3,9 +3,13 @@
 #include "Frame.h"
 #include "KPExtractor.h"
 
+#include "Matcher.h"
+
 #include "Mapper.h"
 #include "Map.h"
 #include "MapPoint.h"
+
+#include <functional>
 
 namespace TS_SfM {
   System::System(const std::string& str_config_file) {
@@ -66,9 +70,15 @@ namespace TS_SfM {
   }
 
   // Initialization is done in 3-view geometry
-  int InitializeGlobalMap(std::vector<Frame>& v_frames) {
+  int System::InitializeGlobalMap(std::vector<std::reference_wrapper<Frame>>& v_frames) {
     int num_map_points = -1; 
     assert(v_frames.size() == 3);  
+
+    Frame& frame_1st = v_frames[0].get();
+    Frame& frame_2nd = v_frames[1].get();
+    Frame& frame_3rd = v_frames[2].get();
+
+    Matcher matcher(Matcher::CrossCheck, Matcher::Whole);
   
 
     return num_map_points;
@@ -80,6 +90,10 @@ namespace TS_SfM {
               << std::endl;
 
     InitializeFrames(m_v_frames, m_vm_images, m_p_extractor);
+
+    std::vector<std::reference_wrapper<Frame>> 
+      v_ini_frames{m_v_frames[0], m_v_frames[1],m_v_frames[2]};
+    InitializeGlobalMap(v_ini_frames);
 
     std::cout << std::endl;
     return;

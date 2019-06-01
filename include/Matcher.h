@@ -2,6 +2,9 @@
 
 #include <iostream>
 #include <vector>
+#include <memory>
+
+#include <opencv2/opencv.hpp>
 
 namespace TS_SfM {
 
@@ -10,8 +13,6 @@ namespace TS_SfM {
 
   class Matcher {
     public:
-      Matcher();
-      ~Matcher(){};
 
       enum CheckType {
         CrossCheck = 0,
@@ -21,10 +22,34 @@ namespace TS_SfM {
 
       enum SearchType {
         Radius = 0,
-        Grid = 1
+        Grid = 1,
+        Whole = 2
       };
 
-    // private:
+      struct MatcherConfig {
+        CheckType ckeck_type;
+        SearchType search_type;
+        int search_range;
+      };
+
+      Matcher(const CheckType& _checktype, const SearchType& _searchtype);
+      ~Matcher(){};
+
+      template<typename T> 
+      std::vector<cv::DMatch>
+        GetMatches(const Frame& frame0, const Frame& frame1, T value);
+
+    private:
+      std::unique_ptr<cv::BFMatcher> m_p_matcher;
+      const CheckType m_checktype;
+      const SearchType m_searchtype;
+
+      std::vector<cv::DMatch>
+        GetMatchesByGridSearch(const Frame& frame0, const Frame& frame1, int neighbor = 1);
+      std::vector<cv::DMatch>
+        GetMatchesByRadiusSearch(const Frame& frame0, const Frame& frame1, double radius = 50.0);
+      std::vector<cv::DMatch>
+        GetMatchesByWholeSearch(const Frame& frame0, const Frame& frame1);
 
 
   };

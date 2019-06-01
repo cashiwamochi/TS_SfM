@@ -38,7 +38,7 @@ namespace TS_SfM {
 
       void InitializeFrames(std::vector<Frame>& v_frames, std::vector<cv::Mat>& vm_images,
                             const std::shared_ptr<KPExtractor>& p_extractor);
-      int InitializeGlobalMap(std::vector<Frame>& v_frames);
+      int InitializeGlobalMap(std::vector<std::reference_wrapper<Frame>>& v_frames);
   
   };
 
