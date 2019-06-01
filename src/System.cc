@@ -1,6 +1,11 @@
 #include "System.h"
+
 #include "Frame.h"
 #include "KPExtractor.h"
+
+#include "Mapper.h"
+#include "Map.h"
+#include "MapPoint.h"
 
 namespace TS_SfM {
   System::System(const std::string& str_config_file) {
@@ -36,28 +41,45 @@ namespace TS_SfM {
 
   };
 
-  void System::Run() {
-    std::cout << "[LOG] " 
-              << "Start Processing ..."
-              << std::endl;
-
-    std::cout << "[LOG] "
-              << "Extracting Feature points ...";
-    for (size_t i = 0; i < m_vm_images.size(); i++) {
-      Frame frame(i, m_vm_images[i], m_p_extractor); 
-      m_v_frames.push_back(frame);
+  void System::InitializeFrames(std::vector<Frame>& v_frames, std::vector<cv::Mat>& vm_images,
+                                const std::shared_ptr<KPExtractor>& p_extractor)
+  {
+    for (size_t i = 0; i < vm_images.size(); i++) {
+      Frame frame(i, vm_images[i], p_extractor); 
+      v_frames.push_back(frame);
     }
     std::cout << " Done. " << std::endl;
 
     std::cout << "[LOG] "
               << "SfM pipeline starts ...";
 
-    for (size_t i = 0; i < m_v_frames.size(); i++) {
-      m_v_frames[i].ShowFeaturePoints();    
+    for (size_t i = 0; i < v_frames.size(); i++) {
+      v_frames[i].ShowFeaturePoints();    
+      v_frames[i].ShowFeaturePointsInGrids();    
     }
 
+    std::cout << "[LOG] "
+              << "Extracting Feature points ...";
     std::cout << " Done. " << std::endl;
 
+    return;
+  }
+
+  // Initialization is done in 3-view geometry
+  int InitializeGlobalMap(std::vector<Frame>& v_frames) {
+    int num_map_points = -1; 
+    assert(v_frames.size() == 3);  
+  
+
+    return num_map_points;
+  }
+
+  void System::Run() {
+    std::cout << "[LOG] " 
+              << "Start Processing ..."
+              << std::endl;
+
+    InitializeFrames(m_v_frames, m_vm_images, m_p_extractor);
 
     std::cout << std::endl;
     return;

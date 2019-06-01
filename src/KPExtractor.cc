@@ -44,10 +44,11 @@ namespace TS_SfM {
     return; 
   }
 
-  void KPExtractor::DistributeToGrids(const std::vector<cv::KeyPoint>& v_keypoints,
-                                      const cv::Mat& m_descriptors,
-                                      std::vector<std::vector<std::vector<cv::KeyPoint>>>& vvv_grid_kpts,
-                                      std::vector<std::vector<cv::Mat>>& vvm_descs) 
+  std::vector<std::vector<unsigned int>> 
+  KPExtractor::DistributeToGrids(const std::vector<cv::KeyPoint>& v_keypoints,
+                                 const cv::Mat& m_descriptors,
+                                 std::vector<std::vector<std::vector<cv::KeyPoint>>>& vvv_grid_kpts,
+                                 std::vector<std::vector<cv::Mat>>& vvm_grid_descs) 
   {
     std::vector<KPData> v_kpdata;
     v_kpdata.reserve(m_descriptors.rows);
@@ -56,33 +57,48 @@ namespace TS_SfM {
       v_kpdata.push_back(KPData(v_keypoints[row], m_descriptors.row(row))); 
      }
 
+    // sort KeyPoint and Descriptors 
     std::sort(v_kpdata.begin(), v_kpdata.end(), KPData::cmp);
 
-    // for(int i = 0; i < v_kpdata.size(); i++) {
-    //   std::cout << v_kpdata[i].kp.response << std::endl; 
-    // }
-
     vvv_grid_kpts.clear();
-    vvm_descs.clear();
+    vvm_grid_descs.clear();
 
+    // initialize vectors for grids
+    std::vector<std::vector<unsigned int>> 
+      vv_num_grid_kpts(m_num_vertical_grid, std::vector<unsigned int>(m_num_horizontal_grid,0));
     vvv_grid_kpts.resize(m_num_vertical_grid);
-    vvm_descs.resize(m_num_vertical_grid);
+    vvm_grid_descs.resize(m_num_vertical_grid);
     for(unsigned int i = 0; i < m_num_vertical_grid; i++) {
       vvv_grid_kpts[i].resize(m_num_horizontal_grid);
-      vvm_descs[i].resize(m_num_horizontal_grid);
+      vvm_grid_descs[i].resize(m_num_horizontal_grid);
       for(unsigned int j = 0; j < m_num_horizontal_grid; j++) {
         vvv_grid_kpts[i][j].clear(); 
-        vvm_descs[i][j].release();
+        vvm_grid_descs[i][j].release();
       }
     }
 
-    for (cv::KeyPoint kp : v_keypoints) {
-      std::pair<int,int> grid_idx = GetWhichGrid(kp.pt); 
-      vvv_grid_kpts[grid_idx.first][grid_idx.second].push_back(kp);
+    // insert keypoint data to each grids
+    for(KPData data : v_kpdata) {
+      std::pair<int,int> grid_idx = GetWhichGrid(data.kp.pt); 
+      if(vv_num_grid_kpts[grid_idx.first][grid_idx.second]+1 > m_config.num_in_grid) {
+        continue; 
+      }
+      vvv_grid_kpts[grid_idx.first][grid_idx.second].push_back(data.kp);
+      vvm_grid_descs[grid_idx.first][grid_idx.second].push_back(data.descriptor);
+      vv_num_grid_kpts[grid_idx.first][grid_idx.second]++;
     }
+
+#if 0
+    for(unsigned int row = 0; row < m_num_vertical_grid; row++) {
+      for(unsigned int col = 0; col < m_num_horizontal_grid; col++) {
+        unsigned int num_in_grid = (vvv_grid_kpts[row][col].size() < (size_t)m_config.num_in_grid)
+                                   ? vvv_grid_kpts[row][col].size() : m_config.num_in_grid; 
+      } 
+    }
+#endif
   
     
-    return;
+    return vv_num_grid_kpts;
   }
 
   inline std::pair<int, int> KPExtractor::GetWhichGrid(const cv::Point2f& pt) {

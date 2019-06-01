@@ -104,6 +104,7 @@ KPExtractor::ExtractorConfig ConfigLoader::LoadExtractorConfig(const std::string
   extractor_config.octavelayers = static_cast<int>(fs_settings["Extractor.octavelayers"]);
   extractor_config.grid_width = static_cast<int>(fs_settings["Extractor.grid_width"]);
   extractor_config.grid_height = static_cast<int>(fs_settings["Extractor.grid_height"]);
+  extractor_config.num_in_grid = static_cast<int>(fs_settings["Extractor.num_in_grid"]);
 
   return extractor_config;
 }

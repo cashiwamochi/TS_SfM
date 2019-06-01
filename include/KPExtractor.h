@@ -14,6 +14,7 @@ namespace TS_SfM {
         unsigned int octavelayers;
         unsigned int grid_width;
         unsigned int grid_height;
+        unsigned int num_in_grid;
       };
 
       KPExtractor();
@@ -23,10 +24,12 @@ namespace TS_SfM {
                   const ExtractorConfig& _config);
       ~KPExtractor();
 
-    void DistributeToGrids(const std::vector<cv::KeyPoint>& v_keypoints,
-                           const cv::Mat& m_descriptors,
-                           std::vector<std::vector<std::vector<cv::KeyPoint>>>& vvv_grid_kpts,
-                           std::vector<std::vector<cv::Mat>>& vvm_descs);
+      std::vector<std::vector<unsigned int>> 
+        DistributeToGrids(
+          const std::vector<cv::KeyPoint>& v_keypoints,
+          const cv::Mat& m_descriptors,
+          std::vector<std::vector<std::vector<cv::KeyPoint>>>& vvv_grid_kpts,
+          std::vector<std::vector<cv::Mat>>& vvm_grid_descs);
 
       void ExtractFeaturePoints(cv::Mat m_input,
                                 std::vector<cv::KeyPoint>& v_kpts,
