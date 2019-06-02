@@ -12,7 +12,7 @@
 #include <functional>
 
 namespace TS_SfM {
-  System::System(const std::string& str_config_file) {
+  System::System(const std::string& str_config_file) : m_config_file(str_config_file) {
     std::pair<SystemConfig, Camera> _pair_config = ConfigLoader::LoadConfig(str_config_file);  
     m_config = _pair_config.first;
     m_camera = _pair_config.second;
@@ -32,7 +32,8 @@ namespace TS_SfM {
 
     ShowConfig();
     m_v_frames.reserve((int)m_vm_images.size()); 
-    // m_v_frames = std::vector<Frame>((int)m_vm_images.size(), Frame()); 
+
+    // Matcher::MatcherConfig m_matcher_config = ConfigLoader::LoadMatcherConfig(str_config_file);  
 
     m_p_extractor.reset(new KPExtractor(m_image_width, m_image_height,
                         ConfigLoader::LoadExtractorConfig(str_config_file)));
@@ -57,10 +58,12 @@ namespace TS_SfM {
     std::cout << "[LOG] "
               << "SfM pipeline starts ...";
 
+#if 0
     for (size_t i = 0; i < v_frames.size(); i++) {
-      v_frames[i].ShowFeaturePoints();    
+      // v_frames[i].ShowFeaturePoints();    
       v_frames[i].ShowFeaturePointsInGrids();    
     }
+#endif
 
     std::cout << "[LOG] "
               << "Extracting Feature points ...";
@@ -78,8 +81,11 @@ namespace TS_SfM {
     Frame& frame_2nd = v_frames[1].get();
     Frame& frame_3rd = v_frames[2].get();
 
-    Matcher matcher(Matcher::CrossCheck, Matcher::Whole);
-  
+    Matcher matcher(ConfigLoader::LoadMatcherConfig(m_config_file));
+
+    std::vector<cv::DMatch> v_matches_12 = matcher.GetMatches(frame_1st,frame_2nd);
+    std::vector<cv::DMatch> v_matches_13 = matcher.GetMatches(frame_1st,frame_3rd);
+    std::vector<cv::DMatch> v_matches_23 = matcher.GetMatches(frame_2nd,frame_3rd);
 
     return num_map_points;
   }

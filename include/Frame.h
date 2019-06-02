@@ -17,9 +17,13 @@ namespace TS_SfM {
       void ShowFeaturePointsInGrids();
 
       const int m_id;
-      const cv::Mat m_m_image;
+
+      cv::Mat GetDescriptors() const; 
+      std::vector<cv::KeyPoint> GetKeyPoints() const;
+      cv::Mat GetImage() const;
 
     private:
+      const cv::Mat m_m_image;
       bool m_is_key;
       cv::Mat m_m_cTw; // (4 x 4, CV_F64C1)
 

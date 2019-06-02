@@ -101,6 +101,16 @@ namespace TS_SfM {
     return vv_num_grid_kpts;
   }
 
+  const KPExtractor::ExtractorConfig KPExtractor::GetConfig() 
+  {
+    return m_config; 
+  }
+
+  const std::pair<unsigned int, unsigned int> KPExtractor::GetGridSize() 
+  {
+    return std::make_pair(m_num_vertical_grid, m_num_horizontal_grid); 
+  }
+
   inline std::pair<int, int> KPExtractor::GetWhichGrid(const cv::Point2f& pt) {
     int horizontal_grid_idx 
       = static_cast<int>((pt.x - (m_image_width%m_config.grid_width)/2.0)/(float)m_config.grid_width);

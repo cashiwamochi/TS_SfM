@@ -108,3 +108,33 @@ KPExtractor::ExtractorConfig ConfigLoader::LoadExtractorConfig(const std::string
 
   return extractor_config;
 }
+
+Matcher::MatcherConfig ConfigLoader::LoadMatcherConfig(const std::string str_config_file) {
+  cv::FileStorage fs_settings(str_config_file, cv::FileStorage::READ);
+  Matcher::MatcherConfig matcher_config;
+
+  std::string _check_type = static_cast<std::string>(fs_settings["Matcher.check_type"]);
+  std::string _search_type = static_cast<std::string>(fs_settings["Matcher.check_type"]);
+
+    if(_check_type == "CrossCheck")
+      matcher_config.check_type = Matcher::CrossCheck;
+    else if(_check_type == "RatioTest")
+      matcher_config.check_type = Matcher::RatioTest;
+    else if(_check_type == "CrossRatioCheck")
+      matcher_config.check_type = Matcher::CrossRatioCheck;
+    else
+      matcher_config.check_type = Matcher::CrossCheck;
+
+    if(_search_type == "Radius")
+      matcher_config.search_type = Matcher::Radius;
+    else if(_search_type == "Grid")
+      matcher_config.search_type = Matcher::Grid;
+    else if(_search_type == "Whole")
+      matcher_config.search_type = Matcher::Whole;
+    else 
+      matcher_config.search_type = Matcher::Whole;
+
+  matcher_config.search_range = static_cast<int>(fs_settings["Matcher.search_range"]);
+
+  return matcher_config;
+}

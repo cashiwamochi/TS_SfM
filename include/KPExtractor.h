@@ -35,6 +35,9 @@ namespace TS_SfM {
                                 std::vector<cv::KeyPoint>& v_kpts,
                                 cv::Mat& m_descriptors);
 
+      const ExtractorConfig GetConfig(); 
+      const std::pair<unsigned int, unsigned int> GetGridSize(); 
+
       std::vector< std::vector<std::pair<cv::Point2f, cv::Point2f>>> GetGrids();
 
     private:

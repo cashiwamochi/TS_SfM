@@ -27,30 +27,34 @@ namespace TS_SfM {
       };
 
       struct MatcherConfig {
-        CheckType ckeck_type;
+        CheckType check_type;
         SearchType search_type;
         int search_range;
       };
 
-      Matcher(const CheckType& _checktype, const SearchType& _searchtype);
+      Matcher(const MatcherConfig _config);
       ~Matcher(){};
 
-      template<typename T> 
       std::vector<cv::DMatch>
-        GetMatches(const Frame& frame0, const Frame& frame1, T value);
+        GetMatches(const Frame& frame0, const Frame& frame1);
 
     private:
       std::unique_ptr<cv::BFMatcher> m_p_matcher;
-      const CheckType m_checktype;
-      const SearchType m_searchtype;
+      const MatcherConfig m_config;
 
       std::vector<cv::DMatch>
         GetMatchesByGridSearch(const Frame& frame0, const Frame& frame1, int neighbor = 1);
       std::vector<cv::DMatch>
-        GetMatchesByRadiusSearch(const Frame& frame0, const Frame& frame1, double radius = 50.0);
-      std::vector<cv::DMatch>
+        GetMatchesByRadiusSearch(const Frame& frame0, const Frame& frame1, int radius = 50);
+       std::vector<cv::DMatch>
         GetMatchesByWholeSearch(const Frame& frame0, const Frame& frame1);
 
+      std::vector<cv::DMatch>
+        GetMatchesByEpipolarSearch(const Frame& frame0, const Frame& frame1);
+      std::vector<cv::DMatch>
+        GetMatchesUsingMotionModel(const Frame& frame0, const Frame& frame1);
+
+      void ShowMatches(const Frame& frame0, const Frame& frame1, const std::vector<cv::DMatch>& v_matches_01);
 
   };
 

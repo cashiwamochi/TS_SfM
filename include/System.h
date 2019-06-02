@@ -22,6 +22,7 @@ namespace TS_SfM {
 
     private:
       void ShowConfig();
+      const std::string m_config_file;
       SystemConfig m_config;
       Camera m_camera;
       unsigned int m_image_width, m_image_height;
@@ -39,7 +40,6 @@ namespace TS_SfM {
       void InitializeFrames(std::vector<Frame>& v_frames, std::vector<cv::Mat>& vm_images,
                             const std::shared_ptr<KPExtractor>& p_extractor);
       int InitializeGlobalMap(std::vector<std::reference_wrapper<Frame>>& v_frames);
-  
   };
 
 } //TS_SfM
