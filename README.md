@@ -1,2 +1,2 @@
-# ST_SfM
-Sequential Tiny Structure from Motion
+# TS_SfM
+Tiny Sequential Structure from Motion
