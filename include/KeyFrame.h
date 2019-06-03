@@ -22,15 +22,13 @@ namespace TS_SfM {
       const cv::Mat m_m_image;
       cv::Mat m_m_cTw; // (4 x 4, CV_F64C1)
 
-      // original data
-      // const std::vector<cv::KeyPoint> m_v_kpts;
-      // const cv::Mat m_m_descriptors;
+      const std::vector<cv::KeyPoint> m_v_kpts;
+      const cv::Mat m_m_descriptors;
 
-      // data assigned to grids
-      // const std::vector<std::vector<std::vector<cv::KeyPoint>>> m_vvv_grid_kpts;
-      // const std::vector<std::vector<cv::Mat>> m_vvm_grid_descs;
-      // const std::vector<std::vector<unsigned int>> m_vv_num_grid_kpts;
-      // const unsigned int m_num_assigned_kps;
+      const std::vector<std::vector<std::vector<cv::KeyPoint>>> m_vvv_grid_kpts;
+      const std::vector<std::vector<cv::Mat>> m_vvm_grid_descs;
+      const std::vector<std::vector<unsigned int>> m_vv_num_grid_kpts;
+      const unsigned int m_num_assigned_kps;
 
   };
 };

@@ -93,6 +93,34 @@ namespace TS_SfM {
     return m_output; 
   }
 
+  cv::Mat Frame::GetPose() const {
+    cv::Mat m_output = m_m_cTw.clone();
+    return m_output; 
+  } 
+
+  std::vector<std::vector<std::vector<cv::KeyPoint>>> 
+    Frame::GetGridKeyPoints() const
+  {
+    return m_vvv_grid_kpts; 
+  }
+
+  std::vector<std::vector<cv::Mat>>
+    Frame::GetGridDescs() const
+  {
+    return m_vvm_grid_descs; 
+  }
+
+  std::vector<std::vector<unsigned int>> 
+    Frame::GetGridKeyPointsNum() const
+  {
+    return m_vv_num_grid_kpts;
+  }
+
+  unsigned int Frame::GetAssignedKeyPointsNum() const
+  {
+    return m_num_assigned_kps; 
+  }
+
   void Frame::ShowFeaturePoints() {
     cv::Mat output;
     cv::drawKeypoints(m_m_image, m_v_kpts, output);

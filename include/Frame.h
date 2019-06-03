@@ -21,6 +21,12 @@ namespace TS_SfM {
       cv::Mat GetDescriptors() const; 
       std::vector<cv::KeyPoint> GetKeyPoints() const;
       cv::Mat GetImage() const;
+      cv::Mat GetPose() const;
+      std::vector<std::vector<std::vector<cv::KeyPoint>>> GetGridKeyPoints() const;
+      std::vector<std::vector<cv::Mat>> GetGridDescs() const;
+      std::vector<std::vector<unsigned int>> GetGridKeyPointsNum() const;
+      unsigned int GetAssignedKeyPointsNum() const;
+
 
     private:
       const cv::Mat m_m_image;
