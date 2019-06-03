@@ -87,6 +87,16 @@ namespace TS_SfM {
     std::vector<cv::DMatch> v_matches_13 = matcher.GetMatches(frame_1st,frame_3rd);
     std::vector<cv::DMatch> v_matches_23 = matcher.GetMatches(frame_2nd,frame_3rd);
 
+    // Compute Fundamental Matrix
+
+
+
+    // Triangulation
+
+
+
+    // Bundle Adjustment
+
     return num_map_points;
   }
 

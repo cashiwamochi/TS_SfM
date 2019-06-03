@@ -76,6 +76,7 @@ add_library(
   src/Tracker.cc
   src/Mapper.cc
   src/Frame.cc
+  src/KeyFrame.cc
   src/MapPoint.cc
   src/Map.cc
   src/KPExtractor.cc

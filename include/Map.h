@@ -6,6 +6,7 @@
 namespace TS_SfM {
 
   class MapPoint;
+  class Frame;
 
   class Map {
     public:
@@ -16,6 +17,7 @@ namespace TS_SfM {
 
 
       std::list<MapPoint> m_l_map_point;
+      std::list<Frame> m_l_keyframe;
   };
 
 } // namespace
