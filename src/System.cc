@@ -4,6 +4,7 @@
 #include "KPExtractor.h"
 
 #include "Matcher.h"
+#include "Solver.h"
 
 #include "Mapper.h"
 #include "Map.h"
@@ -88,6 +89,15 @@ namespace TS_SfM {
     std::vector<cv::DMatch> v_matches_23 = matcher.GetMatches(frame_2nd,frame_3rd);
 
     // Compute Fundamental Matrix
+    cv::Mat mK = (cv::Mat_<float>(3,3) << m_camera.f_fx, 0.0, m_camera.f_cx,
+                                          0.0, m_camera.f_fy, m_camera.f_cy,
+                                          0.0,           0.0,           1.0);
+
+    cv::Mat mE, mF;
+    std::vector<bool> vb_mask;
+    int score;
+    Solver::SolveEpipolarConstraintRANSAC(mK, std::make_pair(frame_1st.GetKeyPoints(),frame_2nd.GetKeyPoints()),
+                                  v_matches_12, mF, mE, vb_mask, score);
 
 
 
