@@ -22,7 +22,7 @@ namespace Solver {
     else{
     // Generate RANSAC random sample idx
     std::mt19937_64 mt(std::random_device{}());
-    std::uniform_int_distribution<int> dist(0, (int)v_matches.size());
+    std::uniform_int_distribution<int> dist(0, (int)v_matches.size()-1);
     std::vector<std::vector<int>> vv_sample_idx(max_iteration, std::vector<int>(8,-1));
     for(size_t i = 0; i < max_iteration; ++i) {
       for(int j = 0; j < 8; ++j) {
@@ -55,5 +55,5 @@ namespace Solver {
   
     return is_solved;
   }
-} // Solver
-} // TS_SfM
+}; // Solver
+}; // TS_SfM
