@@ -47,6 +47,37 @@ namespace TS_SfM {
 
   };
 
+  void System::DrawEpiLines(const Frame& f0, const Frame& f1, 
+                            const std::vector<cv::DMatch>& v_matches01, const std::vector<bool>& vb_mask,
+                            const cv::Mat& F) const
+  {
+    cv::Mat output = f1.GetImage().clone();
+    int max_line_num = 10;
+    int line_num = 0;
+    std::vector<cv::KeyPoint> vkpts0 = f0.GetKeyPoints();
+    std::vector<cv::KeyPoint> vkpts1 = f1.GetKeyPoints();
+    for(int i = 0; i < vb_mask.size(); ++i) {
+      if(vb_mask[i] && line_num < max_line_num) {
+        cv::Mat pt0 = (cv::Mat_<float>(3,1) << vkpts0[i].pt.x, vkpts0[i].pt.y, 1.0);
+        cv::Mat l = F * cv::Mat(pt0);
+        cv::Vec3f line(l.reshape(3).at<cv::Vec3f>());
+
+        cv::line(output,
+                 cv::Point2f(0, -line(2)/line(1)),
+                 cv::Point2f((float)output.cols-1.0, (-line(2)-line(0)*(output.cols-1))/line(1) ), 
+                 cv::Scalar(0,255,0), 3);
+      
+        line_num++;
+      } 
+    }
+
+    cv::imshow("epipolar-line", output);
+    cv::waitKey();
+
+
+    return;
+  }
+
   void System::InitializeFrames(std::vector<Frame>& v_frames, std::vector<cv::Mat>& vm_images,
                                 const std::shared_ptr<KPExtractor>& p_extractor)
   {
@@ -96,10 +127,16 @@ namespace TS_SfM {
     cv::Mat mE, mF;
     std::vector<bool> vb_mask;
     int score;
-    Solver::SolveEpipolarConstraintRANSAC(mK, std::make_pair(frame_1st.GetKeyPoints(),frame_2nd.GetKeyPoints()),
-                                  v_matches_12, mF, mE, vb_mask, score);
+    Solver::SolveEpipolarConstraintRANSAC(mK, 
+                                          std::make_pair(frame_1st.GetKeyPoints(),frame_2nd.GetKeyPoints()),
+                                          v_matches_12, mF, vb_mask, score);
 
+    std::cout << "Score = " << score
+              << " / " << v_matches_12.size() <<  std::endl;
 
+    DrawEpiLines(frame_1st, frame_2nd, v_matches_12, vb_mask, mF);
+
+    // decompose E
 
     // Triangulation
 

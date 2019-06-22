@@ -40,6 +40,10 @@ namespace TS_SfM {
       void InitializeFrames(std::vector<Frame>& v_frames, std::vector<cv::Mat>& vm_images,
                             const std::shared_ptr<KPExtractor>& p_extractor);
       int InitializeGlobalMap(std::vector<std::reference_wrapper<Frame>>& v_frames);
+
+      void DrawEpiLines(const Frame& f0, const Frame& f1, 
+                        const std::vector<cv::DMatch>& v_matches01, const std::vector<bool>& vb_mask,
+                        const cv::Mat& F) const;
   };
 
 } //TS_SfM

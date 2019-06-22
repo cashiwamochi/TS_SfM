@@ -91,6 +91,8 @@ namespace TS_SfM {
                     frame1.GetImage(), frame1.GetKeyPoints(),
                     v_matches_01, m_output);
 
+    // std::cout << frame0.GetAssignedKeyPointsNum() << std::endl;
+    // std::cout << v_matches_01.size() << std::endl;
     cv::imshow("viewer-matches", m_output);
     cv::waitKey(0);
 
