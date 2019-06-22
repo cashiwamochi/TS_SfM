@@ -136,15 +136,24 @@ namespace TS_SfM {
                                           std::make_pair(frame_1st.GetKeyPoints(),frame_2nd.GetKeyPoints()),
                                           v_matches_12, mF, vb_mask, score);
 
+    // remain only inlier matches
+    std::vector<cv::DMatch> _v_matches_12 = v_matches_12;
+    v_matches_12.clear();
+    for(size_t i = 0; i < _v_matches_12.size(); i++) {
+      if(vb_mask[i])  {
+        v_matches_12.push_back(_v_matches_12[i]); 
+      }
+    }
+
     std::cout << "Score = " << score
               << " / " << v_matches_12.size() <<  std::endl;
 
-    DrawEpiLines(frame_1st, frame_2nd, v_matches_12, vb_mask, mF);
+    if(false) DrawEpiLines(frame_1st, frame_2nd, v_matches_12, vb_mask, mF);
 
     // decompose E
-    // cv::Mat mE = mK.t() * mF * mK;
-    // Solver::DecomposeE(frame_1st.GetKeyPoints(), frame_2nd.GetKeyPoints(),
-    //                    v_matches_12, mE);
+    cv::Mat mE = mK.t() * mF * mK;
+    Solver::DecomposeE(frame_1st.GetKeyPoints(), frame_2nd.GetKeyPoints(),
+                       v_matches_12, mE);
 
 
     // Triangulation

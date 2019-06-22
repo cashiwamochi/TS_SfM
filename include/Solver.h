@@ -9,10 +9,12 @@
 namespace TS_SfM {
 namespace Solver {
 
-    using Eigen34f = Eigen::Matrix<float,3,4>;
+    using Matrix34f = Eigen::Matrix<float,3,4>;
+    using Matrix44f = Eigen::Matrix<float,4,4>;
 
     using SvdInEight1st = Eigen::JacobiSVD< Eigen::Matrix<float,8,9>,Eigen::ColPivHouseholderQRPreconditioner>;
     using SvdInEight2nd = Eigen::JacobiSVD< Eigen::Matrix<float,3,3>,Eigen::ColPivHouseholderQRPreconditioner>;
+    using SvdInTri = Eigen::JacobiSVD< Eigen::Matrix<float,4,4>,Eigen::ColPivHouseholderQRPreconditioner>;
 
   cv::Mat DecomposeE(const std::vector<cv::KeyPoint>& pts0,
                      const std::vector<cv::KeyPoint>& pts1,

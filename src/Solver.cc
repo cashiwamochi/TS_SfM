@@ -4,45 +4,86 @@
 namespace TS_SfM {
 namespace Solver {
 
-  cv::Mat DecomposeE(const std::vector<cv::KeyPoint>& pts0,
-                     const std::vector<cv::KeyPoint>& pts1,
-                     const std::vector<cv::DMatch>& v_matches,
+  cv::Mat DecomposeE(const std::vector<cv::KeyPoint>& v_pts0,
+                     const std::vector<cv::KeyPoint>& v_pts1,
+                     const std::vector<cv::DMatch>& v_matches_01,
                      const cv::Mat& E)
   {
     cv::Mat T_01 = cv::Mat::eye(4,4,CV_32FC1);
-    using SvdInDecompE = Eigen::JacobiSVD< Eigen::Matrix<float,3,3>,Eigen::ColPivHouseholderQRPreconditioner>;
+    using SvdInDecompE = Eigen::JacobiSVD<Eigen::Matrix<float,3,3>,Eigen::ColPivHouseholderQRPreconditioner>;
     Eigen::Matrix<float, 3, 3> _E;
-    _E << E.at<float>(0,8), E.at<float>(1,8), E.at<float>(2,8),
-          E.at<float>(3,8), E.at<float>(4,8), E.at<float>(5,8),
-          E.at<float>(6,8), E.at<float>(7,8), E.at<float>(8,8);
+    _E << E.at<float>(0,0), E.at<float>(0,1), E.at<float>(0,2),
+          E.at<float>(1,0), E.at<float>(1,1), E.at<float>(1,2),
+          E.at<float>(2,0), E.at<float>(2,1), E.at<float>(2,2);
     SvdInDecompE svd(_E, Eigen::ComputeFullU | Eigen::ComputeFullV);
     Eigen::MatrixXf U = svd.matrixU();
     Eigen::MatrixXf V = svd.matrixV();
 
-    Eigen::Matrix<float, 3, 3> W;
+    Eigen::Matrix<float,3,3> W;
     W << 0.0, -1.0, 0.0,
          1.0,  0.0, 0.0,
          0.0,  0.0, 1.0;
 
-    std::vector< Eigen34f > v_eig_T;
+    std::vector< Matrix34f > v_eig_T;
     v_eig_T.reserve(4);
-    Eigen34f eig_T;
-
+    Matrix34f eig_T;
+    
     eig_T.block(0,0,3,3) = U * W * V.transpose();
-    eig_T.col(3) = U.col(3);
+    eig_T.col(3) = U.col(2)/U.col(2).norm();
     v_eig_T.push_back(eig_T);
 
     eig_T.block(0,0,3,3) = U * W * V.transpose();
-    eig_T.col(3) = -U.col(3);
+    eig_T.col(3) = -U.col(2)/U.col(2).norm();
     v_eig_T.push_back(eig_T);
 
     eig_T.block(0,0,3,3) = U * W.transpose() * V.transpose();
-    eig_T.col(3) = U.col(3);
+    eig_T.col(3) = U.col(2)/U.col(2).norm();
     v_eig_T.push_back(eig_T);
 
     eig_T.block(0,0,3,3) = U * W.transpose() * V.transpose();
-    eig_T.col(3) = -U.col(3);
+    eig_T.col(3) = -U.col(2)/U.col(2).norm();
     v_eig_T.push_back(eig_T);
+
+    Matrix34f P;
+    P << 1.0, 0.0, 0.0, 0.0,
+         0.0, 1.0, 0.0, 0.0,
+         0.0, 0.0, 1.0, 0.0;
+
+    int correct_solution_idx = -1;
+    int reconst_num_in_front_cam = 0;
+    for(int i = 0; i < 4; ++i) {
+      /*
+      std::cout << v_eig_T[i] << std::endl; 
+      std::cout << "-----------------" << std::endl;
+      */
+      int count = 0;
+      for(size_t n = 0; n < v_matches_01.size(); ++n) {
+        float x0 = v_pts0[n].pt.x;
+        float y0 = v_pts0[n].pt.y;
+        float x1 = v_pts1[n].pt.x;
+        float y1 = v_pts1[n].pt.y;
+        Matrix44f A = Eigen::MatrixXf::Zero(4, 4);
+        A.row(0) = x0*P.row(2) - P.row(0);
+        A.row(1) = x0*P.row(2) - P.row(1);
+        A.row(2) = x0*v_eig_T[i].row(2) - v_eig_T[i].row(0);
+        A.row(3) = x0*v_eig_T[i].row(2) - v_eig_T[i].row(1);
+
+        SvdInTri svd(A, Eigen::ComputeFullU | Eigen::ComputeFullV);
+        Eigen::MatrixXf pt4D_0 = svd.matrixV().col(3)/svd.matrixV()(3,3);
+        Eigen::MatrixXf pt4D_1 = v_eig_T[i]*pt4D_0;
+        if(pt4D_0(2) > 0.0 && pt4D_1(2) > 0.0) {
+          ++count;
+        }
+      }
+
+      if(count > reconst_num_in_front_cam) {
+        reconst_num_in_front_cam = count;
+        correct_solution_idx = i;
+      }
+    }
+
+    // std::cout << correct_solution_idx << std::endl;
+    // std::cout << reconst_num_in_front_cam << std::endl;
 
     return T_01;
   }
@@ -79,7 +120,7 @@ namespace Solver {
       cv::Mat best_F;
       std::vector<bool> best_mask(v_matches.size(), false);
       for(int ransac_iter = 0; ransac_iter < max_iteration; ransac_iter++) {
-        int current_score_inliers = -1;
+        int current_score_inliers = 0;
         cv::Mat current_F;
         std::vector<bool> current_mask(v_matches.size(), false);
 
