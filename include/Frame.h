@@ -27,6 +27,8 @@ namespace TS_SfM {
       std::vector<std::vector<unsigned int>> GetGridKeyPointsNum() const;
       unsigned int GetAssignedKeyPointsNum() const;
 
+      void SetPose(const cv::Mat& _cTw){m_m_cTw = _cTw.clone();};
+
 
     private:
       const cv::Mat m_m_image;

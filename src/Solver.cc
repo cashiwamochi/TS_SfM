@@ -185,5 +185,17 @@ namespace Solver {
   
     return is_solved;
   }
+
+  std::vector<cv::Point3f> Triangulate(const std::vector<cv::KeyPoint>& pts0,
+                                       const std::vector<cv::KeyPoint>& pts1,
+                                       const std::vector<cv::DMatch>& v_matches_01,
+                                       const cv::Mat& T_01/*3x4*/)
+
+  {
+    std::vector<cv::Point3f> v_pt3D;
+    v_pt3D.resize(v_matches_01.size()); 
+
+    return v_pt3D;
+  }
 }; // Solver
 }; // TS_SfM

@@ -40,7 +40,14 @@ namespace Solver {
   float ComputeEightPointsAlgorithm(const std::vector<cv::Point2f>& pts0,
                                     const std::vector<cv::Point2f>& pts1,
                                     cv::Mat& F);
-};
+
+  std::vector<cv::Point3f> Triangulate(const std::vector<cv::KeyPoint>& pts0,
+                                       const std::vector<cv::KeyPoint>& pts1,
+                                       const std::vector<cv::DMatch>& v_matches_01,
+                                       const cv::Mat& T_01/*3x4*/);
+
+
+}; // Solver namespace
 
   inline std::vector<float> Solver::ComputeEpipolarDistances(const std::vector<cv::KeyPoint>& pts0,
                                                              const std::vector<cv::KeyPoint>& pts1,
