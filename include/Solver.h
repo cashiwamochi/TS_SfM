@@ -9,8 +9,15 @@
 namespace TS_SfM {
 namespace Solver {
 
+    using Eigen34f = Eigen::Matrix<float,3,4>;
+
     using SvdInEight1st = Eigen::JacobiSVD< Eigen::Matrix<float,8,9>,Eigen::ColPivHouseholderQRPreconditioner>;
     using SvdInEight2nd = Eigen::JacobiSVD< Eigen::Matrix<float,3,3>,Eigen::ColPivHouseholderQRPreconditioner>;
+
+  cv::Mat DecomposeE(const std::vector<cv::KeyPoint>& pts0,
+                     const std::vector<cv::KeyPoint>& pts1,
+                     const std::vector<cv::DMatch>& v_matches,
+                     const cv::Mat& E);
 
   // Given intrinsic params and matchings nad kpts, Compute E and F matrix 
   bool SolveEpipolarConstraintRANSAC(
@@ -20,7 +27,6 @@ namespace Solver {
       cv::Mat& F, std::vector<bool>& vb_mask, int& score,
       int max_iteration = 300, float threshold = 0.999);
 
-  void DrawEpipoleLines();
   std::vector<float> ComputeEpipolarDistances(const std::vector<cv::KeyPoint>& pts0,
                                               const std::vector<cv::KeyPoint>& pts1,
                                               const std::vector<cv::DMatch>& v_matches,

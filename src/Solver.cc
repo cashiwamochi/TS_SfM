@@ -4,9 +4,49 @@
 namespace TS_SfM {
 namespace Solver {
 
-  void DrawEpipoleLines() {
-  
-  };
+  cv::Mat DecomposeE(const std::vector<cv::KeyPoint>& pts0,
+                     const std::vector<cv::KeyPoint>& pts1,
+                     const std::vector<cv::DMatch>& v_matches,
+                     const cv::Mat& E)
+  {
+    cv::Mat T_01 = cv::Mat::eye(4,4,CV_32FC1);
+    using SvdInDecompE = Eigen::JacobiSVD< Eigen::Matrix<float,3,3>,Eigen::ColPivHouseholderQRPreconditioner>;
+    Eigen::Matrix<float, 3, 3> _E;
+    _E << E.at<float>(0,8), E.at<float>(1,8), E.at<float>(2,8),
+          E.at<float>(3,8), E.at<float>(4,8), E.at<float>(5,8),
+          E.at<float>(6,8), E.at<float>(7,8), E.at<float>(8,8);
+    SvdInDecompE svd(_E, Eigen::ComputeFullU | Eigen::ComputeFullV);
+    Eigen::MatrixXf U = svd.matrixU();
+    Eigen::MatrixXf V = svd.matrixV();
+
+    Eigen::Matrix<float, 3, 3> W;
+    W << 0.0, -1.0, 0.0,
+         1.0,  0.0, 0.0,
+         0.0,  0.0, 1.0;
+
+    std::vector< Eigen34f > v_eig_T;
+    v_eig_T.reserve(4);
+    Eigen34f eig_T;
+
+    eig_T.block(0,0,3,3) = U * W * V.transpose();
+    eig_T.col(3) = U.col(3);
+    v_eig_T.push_back(eig_T);
+
+    eig_T.block(0,0,3,3) = U * W * V.transpose();
+    eig_T.col(3) = -U.col(3);
+    v_eig_T.push_back(eig_T);
+
+    eig_T.block(0,0,3,3) = U * W.transpose() * V.transpose();
+    eig_T.col(3) = U.col(3);
+    v_eig_T.push_back(eig_T);
+
+    eig_T.block(0,0,3,3) = U * W.transpose() * V.transpose();
+    eig_T.col(3) = -U.col(3);
+    v_eig_T.push_back(eig_T);
+
+    return T_01;
+  }
+
 
   bool SolveEpipolarConstraintRANSAC(
       const cv::Mat& K,

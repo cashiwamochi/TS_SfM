@@ -124,7 +124,7 @@ namespace TS_SfM {
                                           0.0, m_camera.f_fy, m_camera.f_cy,
                                           0.0,           0.0,           1.0);
 
-    cv::Mat mE, mF;
+    cv::Mat mF;
     std::vector<bool> vb_mask;
     int score;
     Solver::SolveEpipolarConstraintRANSAC(mK, 
@@ -137,6 +137,10 @@ namespace TS_SfM {
     DrawEpiLines(frame_1st, frame_2nd, v_matches_12, vb_mask, mF);
 
     // decompose E
+    // cv::Mat mE = mK.t() * mF * mK;
+    // Solver::DecomposeE(frame_1st.GetKeyPoints(), frame_2nd.GetKeyPoints(),
+    //                    v_matches_12, mE);
+
 
     // Triangulation
 
