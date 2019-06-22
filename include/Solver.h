@@ -21,11 +21,11 @@ namespace Solver {
 
   // Given intrinsic params and matchings nad kpts, Compute E and F matrix 
   bool SolveEpipolarConstraintRANSAC(
-      const cv::Mat& K,
+      const cv::Mat& image0, const cv::Mat& image1,
       const std::pair<std::vector<cv::KeyPoint>,std::vector<cv::KeyPoint>>& pair_vv_kpts,
       const std::vector<cv::DMatch>& v_matches,
       cv::Mat& F, std::vector<bool>& vb_mask, int& score,
-      int max_iteration = 300, float threshold = 0.999);
+      int max_iteration = 400, float threshold = 1.5);
 
   std::vector<float> ComputeEpipolarDistances(const std::vector<cv::KeyPoint>& pts0,
                                               const std::vector<cv::KeyPoint>& pts1,

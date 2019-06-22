@@ -52,6 +52,7 @@ namespace TS_SfM {
                             const cv::Mat& F) const
   {
     cv::Mat output = f1.GetImage().clone();
+    cv::Mat image0 = f0.GetImage().clone();
     int max_line_num = 10;
     int line_num = 0;
     std::vector<cv::KeyPoint> vkpts0 = f0.GetKeyPoints();
@@ -65,13 +66,17 @@ namespace TS_SfM {
         cv::line(output,
                  cv::Point2f(0, -line(2)/line(1)),
                  cv::Point2f((float)output.cols-1.0, (-line(2)-line(0)*(output.cols-1))/line(1) ), 
-                 cv::Scalar(0,255,0), 3);
+                 cv::Scalar(0,255,0), 1);
+
+        cv::circle(image0, cv::Point((int)vkpts0[i].pt.x, (int)vkpts0[i].pt.y), 3,cv::Scalar(0,0,255), 2);
       
+        i += 40;
         line_num++;
       } 
     }
 
     cv::imshow("epipolar-line", output);
+    cv::imshow("image0", image0);
     cv::waitKey();
 
 
@@ -127,7 +132,7 @@ namespace TS_SfM {
     cv::Mat mF;
     std::vector<bool> vb_mask;
     int score;
-    Solver::SolveEpipolarConstraintRANSAC(mK, 
+    Solver::SolveEpipolarConstraintRANSAC(frame_1st.GetImage(), frame_2nd.GetImage(),  
                                           std::make_pair(frame_1st.GetKeyPoints(),frame_2nd.GetKeyPoints()),
                                           v_matches_12, mF, vb_mask, score);
 
