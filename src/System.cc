@@ -6,7 +6,7 @@
 #include "Matcher.h"
 #include "Solver.h"
 
-#include "Mapper.h"
+#include "Reconstructor.h"
 #include "Map.h"
 #include "MapPoint.h"
 
@@ -35,12 +35,11 @@ namespace TS_SfM {
     m_v_frames.reserve((int)m_vm_images.size()); 
 
     // Matcher::MatcherConfig m_matcher_config = ConfigLoader::LoadMatcherConfig(str_config_file);  
-
     m_p_extractor.reset(new KPExtractor(m_image_width, m_image_height,
                         ConfigLoader::LoadExtractorConfig(str_config_file)));
-    m_p_tracker.reset(new Tracker(ConfigLoader::LoadTrackerConfig(str_config_file)));
-    m_p_mapper.reset(new Mapper(ConfigLoader::LoadMapperConfig(str_config_file)));
 
+    // m_p_map = std::make_shared<Map>();
+    m_p_reconstructor.reset(new Reconstructor(str_config_file));
   }
 
   System::~System() {
@@ -154,7 +153,6 @@ namespace TS_SfM {
     cv::Mat mE = mK.t() * mF * mK;
     Solver::DecomposeE(frame_1st.GetKeyPoints(), frame_2nd.GetKeyPoints(),
                        v_matches_12, mE);
-
 
     // Triangulation
 

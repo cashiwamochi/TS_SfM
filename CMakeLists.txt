@@ -23,7 +23,8 @@ IF (OpenCV_FOUND)
   # message([OpenCV_DEFINITIONS]: ${OpenCV_LIBRARIES})
 ENDIF()
 
-set(Open3D_DIR ~/.local/Open3D/lib/cmake/Open3D/)
+# set(Open3D_DIR ~/.local/Open3D/lib/cmake/Open3D/)
+set(Open3D_DIR ~/.local/Open3D_1/lib/cmake/Open3D/)
 find_package(Open3D REQUIRED)
 IF (Open3D_FOUND)
   list(APPEND Open3D_LIBRARIES dl)
@@ -73,6 +74,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 add_library(
   ${PROJECT_NAME} STATIC
   src/System.cc
+  src/Reconstructor.cc
   src/Tracker.cc
   src/Mapper.cc
   src/Frame.cc

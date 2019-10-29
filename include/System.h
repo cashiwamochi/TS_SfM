@@ -7,8 +7,7 @@ namespace TS_SfM {
 
   class Frame;
   class KPExtractor;
-  class Tracker;
-  class Mapper;
+  class Reconstructor;
   class Map;
   class MapPoint;
 
@@ -33,9 +32,8 @@ namespace TS_SfM {
       std::shared_ptr<KPExtractor> m_p_extractor;
 
       // Those pointers are used globally in TS_SfM::System
-      std::unique_ptr<Tracker> m_p_tracker;
-      std::unique_ptr<Mapper> m_p_mapper;
-      std::unique_ptr<Map> m_p_map;
+      std::unique_ptr<Reconstructor> m_p_reconstructor;
+      std::shared_ptr<Map> m_p_map;
 
       void InitializeFrames(std::vector<Frame>& v_frames, std::vector<cv::Mat>& vm_images,
                             const std::shared_ptr<KPExtractor>& p_extractor);

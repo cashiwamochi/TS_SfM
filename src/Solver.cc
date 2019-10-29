@@ -9,7 +9,7 @@ namespace Solver {
                      const std::vector<cv::DMatch>& v_matches_01,
                      const cv::Mat& E)
   {
-    cv::Mat T_01 = cv::Mat::eye(4,4,CV_32FC1);
+    cv::Mat T_01 = cv::Mat::eye(3,4,CV_32FC1);
     using SvdInDecompE = Eigen::JacobiSVD<Eigen::Matrix<float,3,3>,Eigen::ColPivHouseholderQRPreconditioner>;
     Eigen::Matrix<float, 3, 3> _E;
     _E << E.at<float>(0,0), E.at<float>(0,1), E.at<float>(0,2),
@@ -48,7 +48,7 @@ namespace Solver {
     P << 1.0, 0.0, 0.0, 0.0,
          0.0, 1.0, 0.0, 0.0,
          0.0, 0.0, 1.0, 0.0;
-
+    
     int correct_solution_idx = -1;
     int reconst_num_in_front_cam = 0;
     for(int i = 0; i < 4; ++i) {
@@ -84,6 +84,10 @@ namespace Solver {
 
     // std::cout << correct_solution_idx << std::endl;
     // std::cout << reconst_num_in_front_cam << std::endl;
+    
+    for(int r = 0; r < 3; ++r)
+      for(int c = 0; c < 4; ++c) 
+        T_01.at<float>(r, c) = v_eig_T[correct_solution_idx](r, c);
 
     return T_01;
   }

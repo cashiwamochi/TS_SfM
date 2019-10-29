@@ -10,7 +10,7 @@ namespace TS_SfM {
   class KeyFrame{
     public:
       KeyFrame(const Frame& f);
-      ~KeyFrame();
+      ~KeyFrame(){};
 
       const int m_id;
 
