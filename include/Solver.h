@@ -5,12 +5,37 @@
 
 #include <Eigen/Core>
 #include <Eigen/SVD>
+#include <Eigen/LU>
+
+using Matrix33f = Eigen::Matrix<float,3,3>;
+using Matrix34f = Eigen::Matrix<float,3,4>;
+using Matrix44f = Eigen::Matrix<float,4,4>;
 
 namespace TS_SfM {
-namespace Solver {
+    template<typename _Tp, int _rows, int _cols>
+    void cv2eigen(const cv::Mat& src,
+                   Eigen::Matrix<_Tp, _rows, _cols>& dst )
+    {
+      for(int i = 0; i < src.rows; ++i) {
+        for(int j = 0; j < src.cols; ++j) {
+          dst(i,j) = src.at<_Tp>(i,j);
+        }
+      }
+      return;
+    }
 
-    using Matrix34f = Eigen::Matrix<float,3,4>;
-    using Matrix44f = Eigen::Matrix<float,4,4>;
+    template<typename _Tp, int _rows, int _cols>
+    void eigen2cv(const Eigen::Matrix<_Tp, _rows, _cols>& src,
+                  cv::Mat& dst )
+    {
+      for(int i = 0; i < src.rows(); ++i) {
+        for(int j = 0; j < src.cols(); ++j) {
+          dst.at<_Tp>(i,j) = src(i,j);
+        }
+      }
+      return;
+    }
+namespace Solver {
 
     using SvdInEight1st = Eigen::JacobiSVD< Eigen::Matrix<float,8,9>,Eigen::ColPivHouseholderQRPreconditioner>;
     using SvdInEight2nd = Eigen::JacobiSVD< Eigen::Matrix<float,3,3>,Eigen::ColPivHouseholderQRPreconditioner>;
@@ -19,6 +44,7 @@ namespace Solver {
   cv::Mat DecomposeE(const std::vector<cv::KeyPoint>& pts0,
                      const std::vector<cv::KeyPoint>& pts1,
                      const std::vector<cv::DMatch>& v_matches,
+                     const cv::Mat& K,
                      const cv::Mat& E);
 
   // Given intrinsic params and matchings nad kpts, Compute E and F matrix 
@@ -41,9 +67,10 @@ namespace Solver {
                                     const std::vector<cv::Point2f>& pts1,
                                     cv::Mat& F);
 
-  std::vector<cv::Point3f> Triangulate(const std::vector<cv::KeyPoint>& pts0,
-                                       const std::vector<cv::KeyPoint>& pts1,
+  std::vector<cv::Point3f> Triangulate(const std::vector<cv::KeyPoint>& v_pts0,
+                                       const std::vector<cv::KeyPoint>& v_pts1,
                                        const std::vector<cv::DMatch>& v_matches_01,
+                                       const cv::Mat& K,
                                        const cv::Mat& T_01/*3x4*/);
 
 
@@ -161,6 +188,57 @@ namespace Solver {
     score = Solver::EvaluateFUsingEight(pts0,pts1,F);
 
     return score;
+  }
+
+  inline std::vector<cv::Point3f> Solver::Triangulate(const std::vector<cv::KeyPoint>& v_pts0,
+                                                      const std::vector<cv::KeyPoint>& v_pts1,
+                                                      const std::vector<cv::DMatch>& v_matches_01,
+                                                      const cv::Mat& K,
+                                                      const cv::Mat& T_01/*3x4*/)
+
+  {
+    std::vector<cv::Point3f> v_pt3D;
+    v_pt3D.resize(v_matches_01.size()); 
+
+    Matrix33f eK;
+    cv2eigen(K, eK);
+
+    Matrix34f P;
+    P << 1.0, 0.0, 0.0, 0.0,
+         0.0, 1.0, 0.0, 0.0,
+         0.0, 0.0, 1.0, 0.0;
+    P = eK * P;
+
+    Matrix34f eT_01;
+    cv2eigen(T_01, eT_01);
+    
+    int reconst_num_in_front_cam = 0;
+
+    int count = 0;
+    for(size_t n = 0; n < v_matches_01.size(); ++n) {
+      float x0 = v_pts0[n].pt.x;
+      float y0 = v_pts0[n].pt.y;
+      float x1 = v_pts1[n].pt.x;
+      float y1 = v_pts1[n].pt.y;
+      Matrix44f A = Eigen::MatrixXf::Zero(4, 4);
+      A.row(0) = x0*P.row(2) - P.row(0);
+      A.row(1) = x0*P.row(2) - P.row(1);
+      A.row(2) = x0*eT_01.row(2) - eT_01.row(0);
+      A.row(3) = x0*eT_01.row(2) - eT_01.row(1);
+  
+      SvdInTri svd(A, Eigen::ComputeFullU | Eigen::ComputeFullV);
+      Eigen::MatrixXf pt4D_0 = svd.matrixV().col(3)/svd.matrixV()(3,3);
+      Eigen::MatrixXf pt4D_1 = eT_01*pt4D_0;
+      if(pt4D_0(2) > 0.0 && pt4D_1(2) > 0.0) {
+        ++count;
+      }
+    }
+  
+    if(count > reconst_num_in_front_cam) {
+      reconst_num_in_front_cam = count;
+    }
+
+    return v_pt3D;
   }
 
 };

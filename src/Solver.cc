@@ -7,6 +7,7 @@ namespace Solver {
   cv::Mat DecomposeE(const std::vector<cv::KeyPoint>& v_pts0,
                      const std::vector<cv::KeyPoint>& v_pts1,
                      const std::vector<cv::DMatch>& v_matches_01,
+                     const cv::Mat& K,
                      const cv::Mat& E)
   {
     cv::Mat T_01 = cv::Mat::eye(3,4,CV_32FC1);
@@ -24,30 +25,37 @@ namespace Solver {
          1.0,  0.0, 0.0,
          0.0,  0.0, 1.0;
 
+    Matrix33f eK;
+    cv2eigen(K, eK);
+    // eK << K.at<float>(0,0), K.at<float>(0,1), K.at<float>(0,1),
+    //       K.at<float>(1,0), K.at<float>(1,1), K.at<float>(1,2),
+    //       K.at<float>(2,0), K.at<float>(2,1), K.at<float>(2,2);
+
     std::vector< Matrix34f > v_eig_T;
     v_eig_T.reserve(4);
     Matrix34f eig_T;
     
     eig_T.block(0,0,3,3) = U * W * V.transpose();
     eig_T.col(3) = U.col(2)/U.col(2).norm();
-    v_eig_T.push_back(eig_T);
+    v_eig_T.push_back(eK*eig_T);
 
     eig_T.block(0,0,3,3) = U * W * V.transpose();
     eig_T.col(3) = -U.col(2)/U.col(2).norm();
-    v_eig_T.push_back(eig_T);
+    v_eig_T.push_back(eK*eig_T);
 
     eig_T.block(0,0,3,3) = U * W.transpose() * V.transpose();
     eig_T.col(3) = U.col(2)/U.col(2).norm();
-    v_eig_T.push_back(eig_T);
+    v_eig_T.push_back(eK*eig_T);
 
     eig_T.block(0,0,3,3) = U * W.transpose() * V.transpose();
     eig_T.col(3) = -U.col(2)/U.col(2).norm();
-    v_eig_T.push_back(eig_T);
+    v_eig_T.push_back(eK*eig_T);
 
     Matrix34f P;
     P << 1.0, 0.0, 0.0, 0.0,
          0.0, 1.0, 0.0, 0.0,
          0.0, 0.0, 1.0, 0.0;
+    P = eK * P;
     
     int correct_solution_idx = -1;
     int reconst_num_in_front_cam = 0;
@@ -85,9 +93,11 @@ namespace Solver {
     // std::cout << correct_solution_idx << std::endl;
     // std::cout << reconst_num_in_front_cam << std::endl;
     
-    for(int r = 0; r < 3; ++r)
-      for(int c = 0; c < 4; ++c) 
-        T_01.at<float>(r, c) = v_eig_T[correct_solution_idx](r, c);
+    Matrix34f eT = eK.inverse()*v_eig_T[correct_solution_idx]; 
+    eigen2cv(eT, T_01);
+    // for(int r = 0; r < 3; ++r)
+    //   for(int c = 0; c < 4; ++c) 
+    //     T_01.at<float>(r, c) = (invK*v_eig_T[correct_solution_idx])(r, c);
 
     return T_01;
   }
@@ -190,16 +200,5 @@ namespace Solver {
     return is_solved;
   }
 
-  std::vector<cv::Point3f> Triangulate(const std::vector<cv::KeyPoint>& pts0,
-                                       const std::vector<cv::KeyPoint>& pts1,
-                                       const std::vector<cv::DMatch>& v_matches_01,
-                                       const cv::Mat& T_01/*3x4*/)
-
-  {
-    std::vector<cv::Point3f> v_pt3D;
-    v_pt3D.resize(v_matches_01.size()); 
-
-    return v_pt3D;
-  }
 }; // Solver
 }; // TS_SfM

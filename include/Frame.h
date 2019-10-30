@@ -45,6 +45,10 @@ namespace TS_SfM {
       std::vector<std::vector<unsigned int>> m_vv_num_grid_kpts;
       unsigned int m_num_assigned_kps;
 
+      std::vector<bool> m_vb_triangulated; 
+      std::vector<cv::DMatch> m_v_matches_to_old;
+      std::vector<cv::DMatch> m_v_matches_to_new;
+
   };
 };
 

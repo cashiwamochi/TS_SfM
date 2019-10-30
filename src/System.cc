@@ -128,6 +128,7 @@ namespace TS_SfM {
                                           0.0, m_camera.f_fy, m_camera.f_cy,
                                           0.0,           0.0,           1.0);
 
+    
     cv::Mat mF;
     std::vector<bool> vb_mask;
     int score;
@@ -151,17 +152,117 @@ namespace TS_SfM {
 
     // decompose E
     cv::Mat mE = mK.t() * mF * mK;
-    Solver::DecomposeE(frame_1st.GetKeyPoints(), frame_2nd.GetKeyPoints(),
-                       v_matches_12, mE);
+    cv::Mat T_12 = Solver::DecomposeE(frame_1st.GetKeyPoints(), frame_2nd.GetKeyPoints(), v_matches_12, mK, mE);
 
     // Triangulation
-
-
 
     // Bundle Adjustment
 
     return num_map_points;
   }
+
+  int System::FlexibleInitializeGlobalMap(std::vector<std::reference_wrapper<Frame>>& v_frames) {
+    int num_map_points = -1; 
+
+    int num_pair_frame = (int)v_frames.size();
+
+    Matcher matcher(ConfigLoader::LoadMatcherConfig(m_config_file));
+    std::vector<std::vector<cv::DMatch>> vv_matches;
+    vv_matches.reserve(num_pair_frame);
+    std::vector<std::pair<int,int>> v_pair_frames;
+    v_pair_frames.reserve(num_pair_frame);
+
+    for(int i = 0; i < (int)v_frames.size()-1; ++i) {
+      int j = i + 1;
+      v_pair_frames.push_back(std::make_pair(i,j));
+      std::vector<cv::DMatch> v_matches_ij = matcher.GetMatches(v_frames[i],v_frames[j]);
+      vv_matches.push_back(v_matches_ij);
+    }
+
+    // Compute Fundamental Matrix
+    cv::Mat mK = (cv::Mat_<float>(3,3) << m_camera.f_fx, 0.0, m_camera.f_cx,
+                                          0.0, m_camera.f_fy, m_camera.f_cy,
+                                          0.0,           0.0,           1.0);
+
+    int center_frame_idx = (int)(v_frames.size() - 1)/2;
+    int distance_to_edge = (int)v_frames.size() - center_frame_idx;
+
+    for(int step_from_center = 0; step_from_center < distance_to_edge-1; ++step_from_center) {
+      if(center_frame_idx+step_from_center < (int)v_frames.size()) {
+        int src_frame_idx = center_frame_idx + step_from_center;
+        int dst_frame_idx = center_frame_idx + step_from_center + 1;
+        Frame& src_frame = v_frames[src_frame_idx].get();
+        Frame& dst_frame = v_frames[dst_frame_idx].get();
+        std::vector<cv::DMatch> v_matches = vv_matches[src_frame_idx];
+        cv::Mat mF;
+        std::vector<bool> vb_mask;
+        int score;
+        Solver::SolveEpipolarConstraintRANSAC(src_frame.GetImage(), dst_frame.GetImage(),  
+                                              std::make_pair(src_frame.GetKeyPoints(),dst_frame.GetKeyPoints()),
+                                              v_matches, mF, vb_mask, score);
+
+        std::vector<cv::DMatch> _v_matches = v_matches;
+        v_matches.clear();
+        for(size_t i = 0; i < _v_matches.size(); i++) {
+          if(vb_mask[i])  {
+            v_matches.push_back(_v_matches[i]); 
+          }
+        }
+
+        std::cout << "Score = " << score
+                  << " / " << _v_matches.size() <<  std::endl;
+
+        if(true) DrawEpiLines(src_frame, dst_frame, v_matches, vb_mask, mF);
+
+        // decompose E
+        cv::Mat mE = mK.t() * mF * mK;
+        cv::Mat T_12 = Solver::DecomposeE(src_frame.GetKeyPoints(), dst_frame.GetKeyPoints(), v_matches, mK, mE);
+
+        // Triangulation
+      }
+
+      if(center_frame_idx-step_from_center >= 0) {
+        int src_frame_idx = center_frame_idx + step_from_center - 1;
+        int dst_frame_idx = center_frame_idx + step_from_center;
+        Frame& src_frame = v_frames[src_frame_idx].get();
+        Frame& dst_frame = v_frames[dst_frame_idx].get();
+        std::vector<cv::DMatch> v_matches = vv_matches[src_frame_idx];
+        cv::Mat mF;
+        std::vector<bool> vb_mask;
+        int score;
+        Solver::SolveEpipolarConstraintRANSAC(src_frame.GetImage(), dst_frame.GetImage(),  
+                                              std::make_pair(src_frame.GetKeyPoints(),dst_frame.GetKeyPoints()),
+                                              v_matches, mF, vb_mask, score);
+
+        std::vector<cv::DMatch> _v_matches = v_matches;
+        v_matches.clear();
+        for(size_t i = 0; i < _v_matches.size(); i++) {
+          if(vb_mask[i])  {
+            v_matches.push_back(_v_matches[i]); 
+          }
+        }
+
+        std::cout << "Score = " << score
+                  << " / " << _v_matches.size() <<  std::endl;
+
+        if(true) DrawEpiLines(src_frame, dst_frame, v_matches, vb_mask, mF);
+
+        // decompose E
+        cv::Mat mE = mK.t() * mF * mK;
+        cv::Mat T_12 = Solver::DecomposeE(src_frame.GetKeyPoints(), dst_frame.GetKeyPoints(), v_matches, mK, mE);
+
+        // Triangulation
+        
+      }
+    }
+
+    // Convert frames to keyframes
+    // All data should be inserted to Map
+
+    return num_map_points;
+  }
+
+
 
   void System::Run() {
     std::cout << "[LOG] " 
@@ -172,7 +273,11 @@ namespace TS_SfM {
 
     std::vector<std::reference_wrapper<Frame>> 
       v_ini_frames{m_v_frames[0], m_v_frames[1],m_v_frames[2]};
+#if 0
     InitializeGlobalMap(v_ini_frames);
+#else
+    FlexibleInitializeGlobalMap(v_ini_frames);
+#endif
 
     std::cout << std::endl;
     return;
