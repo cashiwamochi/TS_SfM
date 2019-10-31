@@ -13,9 +13,10 @@ namespace Solver {
     cv::Mat T_01 = cv::Mat::eye(3,4,CV_32FC1);
     using SvdInDecompE = Eigen::JacobiSVD<Eigen::Matrix<float,3,3>,Eigen::ColPivHouseholderQRPreconditioner>;
     Eigen::Matrix<float, 3, 3> _E;
-    _E << E.at<float>(0,0), E.at<float>(0,1), E.at<float>(0,2),
-          E.at<float>(1,0), E.at<float>(1,1), E.at<float>(1,2),
-          E.at<float>(2,0), E.at<float>(2,1), E.at<float>(2,2);
+    cv2eigen(E, _E);
+    // _E << E.at<float>(0,0), E.at<float>(0,1), E.at<float>(0,2),
+    //       E.at<float>(1,0), E.at<float>(1,1), E.at<float>(1,2),
+    //       E.at<float>(2,0), E.at<float>(2,1), E.at<float>(2,2);
     SvdInDecompE svd(_E, Eigen::ComputeFullU | Eigen::ComputeFullV);
     Eigen::MatrixXf U = svd.matrixU();
     Eigen::MatrixXf V = svd.matrixV();
@@ -68,8 +69,8 @@ namespace Solver {
       for(size_t n = 0; n < v_matches_01.size(); ++n) {
         float x0 = v_pts0[n].pt.x;
         float y0 = v_pts0[n].pt.y;
-        float x1 = v_pts1[n].pt.x;
-        float y1 = v_pts1[n].pt.y;
+        // float x1 = v_pts1[n].pt.x;
+        // float y1 = v_pts1[n].pt.y;
         Matrix44f A = Eigen::MatrixXf::Zero(4, 4);
         A.row(0) = x0*P.row(2) - P.row(0);
         A.row(1) = x0*P.row(2) - P.row(1);
@@ -90,14 +91,8 @@ namespace Solver {
       }
     }
 
-    // std::cout << correct_solution_idx << std::endl;
-    // std::cout << reconst_num_in_front_cam << std::endl;
-    
     Matrix34f eT = eK.inverse()*v_eig_T[correct_solution_idx]; 
     eigen2cv(eT, T_01);
-    // for(int r = 0; r < 3; ++r)
-    //   for(int c = 0; c < 4; ++c) 
-    //     T_01.at<float>(r, c) = (invK*v_eig_T[correct_solution_idx])(r, c);
 
     return T_01;
   }

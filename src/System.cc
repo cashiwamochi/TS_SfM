@@ -152,7 +152,7 @@ namespace TS_SfM {
 
     // decompose E
     cv::Mat mE = mK.t() * mF * mK;
-    cv::Mat T_12 = Solver::DecomposeE(frame_1st.GetKeyPoints(), frame_2nd.GetKeyPoints(), v_matches_12, mK, mE);
+    cv::Mat T_01 = Solver::DecomposeE(frame_1st.GetKeyPoints(), frame_2nd.GetKeyPoints(), v_matches_12, mK, mE);
 
     // Triangulation
 
@@ -189,6 +189,7 @@ namespace TS_SfM {
 
     for(int step_from_center = 0; step_from_center < distance_to_edge-1; ++step_from_center) {
       if(center_frame_idx+step_from_center < (int)v_frames.size()) {
+        // We compute matches from old to new always
         int src_frame_idx = center_frame_idx + step_from_center;
         int dst_frame_idx = center_frame_idx + step_from_center + 1;
         Frame& src_frame = v_frames[src_frame_idx].get();
@@ -216,12 +217,18 @@ namespace TS_SfM {
 
         // decompose E
         cv::Mat mE = mK.t() * mF * mK;
-        cv::Mat T_12 = Solver::DecomposeE(src_frame.GetKeyPoints(), dst_frame.GetKeyPoints(), v_matches, mK, mE);
+        cv::Mat T_01 = Solver::DecomposeE(src_frame.GetKeyPoints(), dst_frame.GetKeyPoints(), v_matches, mK, mE);
+        src_frame.SetMatchesToNew(v_matches);
+        dst_frame.SetMatchesToOld(v_matches);
 
         // Triangulation
+        std::vector<cv::Point3f> v_pts_3d = Solver::Triangulate(src_frame.GetKeyPoints(),
+                                                                dst_frame.GetKeyPoints(),
+                                                                v_matches, mK, T_01); 
       }
 
       if(center_frame_idx-step_from_center >= 0) {
+        // We compute matches from old to new always
         int src_frame_idx = center_frame_idx + step_from_center - 1;
         int dst_frame_idx = center_frame_idx + step_from_center;
         Frame& src_frame = v_frames[src_frame_idx].get();
@@ -249,10 +256,15 @@ namespace TS_SfM {
 
         // decompose E
         cv::Mat mE = mK.t() * mF * mK;
-        cv::Mat T_12 = Solver::DecomposeE(src_frame.GetKeyPoints(), dst_frame.GetKeyPoints(), v_matches, mK, mE);
+        cv::Mat T_01 = Solver::DecomposeE(src_frame.GetKeyPoints(), dst_frame.GetKeyPoints(), v_matches, mK, mE);
 
+        src_frame.SetMatchesToNew(v_matches);
+        dst_frame.SetMatchesToOld(v_matches);
         // Triangulation
-        
+        std::vector<cv::Point3f> v_pts_3d = Solver::Triangulate(src_frame.GetKeyPoints(), 
+                                                                dst_frame.GetKeyPoints(),
+                                                                v_matches, mK, T_01); 
+
       }
     }
 
@@ -296,4 +308,3 @@ namespace TS_SfM {
   }
 
 }
-

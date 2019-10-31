@@ -211,6 +211,7 @@ namespace Solver {
 
     Matrix34f eT_01;
     cv2eigen(T_01, eT_01);
+    eT_01 = eK * eT_01;
     
     int reconst_num_in_front_cam = 0;
 
@@ -218,8 +219,8 @@ namespace Solver {
     for(size_t n = 0; n < v_matches_01.size(); ++n) {
       float x0 = v_pts0[n].pt.x;
       float y0 = v_pts0[n].pt.y;
-      float x1 = v_pts1[n].pt.x;
-      float y1 = v_pts1[n].pt.y;
+      // float x1 = v_pts1[n].pt.x;
+      // float y1 = v_pts1[n].pt.y;
       Matrix44f A = Eigen::MatrixXf::Zero(4, 4);
       A.row(0) = x0*P.row(2) - P.row(0);
       A.row(1) = x0*P.row(2) - P.row(1);
@@ -237,6 +238,8 @@ namespace Solver {
     if(count > reconst_num_in_front_cam) {
       reconst_num_in_front_cam = count;
     }
+
+    std::cout << reconst_num_in_front_cam << std::endl;
 
     return v_pt3D;
   }
