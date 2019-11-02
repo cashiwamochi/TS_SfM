@@ -217,15 +217,15 @@ namespace Solver {
 
     int count = 0;
     for(size_t n = 0; n < v_matches_01.size(); ++n) {
-      float x0 = v_pts0[n].pt.x;
-      float y0 = v_pts0[n].pt.y;
-      // float x1 = v_pts1[n].pt.x;
-      // float y1 = v_pts1[n].pt.y;
+      const float x0 = v_pts0[n].pt.x;
+      const float y0 = v_pts0[n].pt.y;
+      const float x1 = v_pts1[n].pt.x;
+      const float y1 = v_pts1[n].pt.y;
       Matrix44f A = Eigen::MatrixXf::Zero(4, 4);
       A.row(0) = x0*P.row(2) - P.row(0);
-      A.row(1) = x0*P.row(2) - P.row(1);
-      A.row(2) = x0*eT_01.row(2) - eT_01.row(0);
-      A.row(3) = x0*eT_01.row(2) - eT_01.row(1);
+      A.row(1) = y0*P.row(2) - P.row(1);
+      A.row(2) = x1*eT_01.row(2) - eT_01.row(0);
+      A.row(3) = y1*eT_01.row(2) - eT_01.row(1);
   
       SvdInTri svd(A, Eigen::ComputeFullU | Eigen::ComputeFullV);
       Eigen::MatrixXf pt4D_0 = svd.matrixV().col(3)/svd.matrixV()(3,3);

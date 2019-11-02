@@ -52,11 +52,11 @@ namespace TS_SfM {
   {
     cv::Mat output = f1.GetImage().clone();
     cv::Mat image0 = f0.GetImage().clone();
-    int max_line_num = 10;
+    int max_line_num = 20;
     int line_num = 0;
     std::vector<cv::KeyPoint> vkpts0 = f0.GetKeyPoints();
     std::vector<cv::KeyPoint> vkpts1 = f1.GetKeyPoints();
-    for(int i = 0; i < vb_mask.size(); ++i) {
+    for(size_t i = 0; i < vb_mask.size(); ++i) {
       if(vb_mask[i] && line_num < max_line_num) {
         cv::Mat pt0 = (cv::Mat_<float>(3,1) << vkpts0[i].pt.x, vkpts0[i].pt.y, 1.0);
         cv::Mat l = F * cv::Mat(pt0);
@@ -69,7 +69,7 @@ namespace TS_SfM {
 
         cv::circle(image0, cv::Point((int)vkpts0[i].pt.x, (int)vkpts0[i].pt.y), 3,cv::Scalar(0,0,255), 2);
       
-        i += 40;
+        i += 80;
         line_num++;
       } 
     }
@@ -307,4 +307,4 @@ namespace TS_SfM {
     return;
   }
 
-}
+} // namespace

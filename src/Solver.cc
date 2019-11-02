@@ -14,12 +14,9 @@ namespace Solver {
     using SvdInDecompE = Eigen::JacobiSVD<Eigen::Matrix<float,3,3>,Eigen::ColPivHouseholderQRPreconditioner>;
     Eigen::Matrix<float, 3, 3> _E;
     cv2eigen(E, _E);
-    // _E << E.at<float>(0,0), E.at<float>(0,1), E.at<float>(0,2),
-    //       E.at<float>(1,0), E.at<float>(1,1), E.at<float>(1,2),
-    //       E.at<float>(2,0), E.at<float>(2,1), E.at<float>(2,2);
     SvdInDecompE svd(_E, Eigen::ComputeFullU | Eigen::ComputeFullV);
     Eigen::MatrixXf U = svd.matrixU();
-    Eigen::MatrixXf V = svd.matrixV();
+    Eigen::MatrixXf Vt = svd.matrixV().transpose();
 
     Eigen::Matrix<float,3,3> W;
     W << 0.0, -1.0, 0.0,
@@ -28,27 +25,24 @@ namespace Solver {
 
     Matrix33f eK;
     cv2eigen(K, eK);
-    // eK << K.at<float>(0,0), K.at<float>(0,1), K.at<float>(0,1),
-    //       K.at<float>(1,0), K.at<float>(1,1), K.at<float>(1,2),
-    //       K.at<float>(2,0), K.at<float>(2,1), K.at<float>(2,2);
 
     std::vector< Matrix34f > v_eig_T;
     v_eig_T.reserve(4);
     Matrix34f eig_T;
-    
-    eig_T.block(0,0,3,3) = U * W * V.transpose();
+
+    eig_T.block(0,0,3,3) = U * W * Vt;
     eig_T.col(3) = U.col(2)/U.col(2).norm();
     v_eig_T.push_back(eK*eig_T);
-
-    eig_T.block(0,0,3,3) = U * W * V.transpose();
+    
+    eig_T.block(0,0,3,3) = U * W * Vt;
     eig_T.col(3) = -U.col(2)/U.col(2).norm();
     v_eig_T.push_back(eK*eig_T);
-
-    eig_T.block(0,0,3,3) = U * W.transpose() * V.transpose();
+    
+    eig_T.block(0,0,3,3) = U * W.transpose() * Vt;
     eig_T.col(3) = U.col(2)/U.col(2).norm();
     v_eig_T.push_back(eK*eig_T);
-
-    eig_T.block(0,0,3,3) = U * W.transpose() * V.transpose();
+    
+    eig_T.block(0,0,3,3) = U * W.transpose() * Vt;
     eig_T.col(3) = -U.col(2)/U.col(2).norm();
     v_eig_T.push_back(eK*eig_T);
 
@@ -62,23 +56,31 @@ namespace Solver {
     int reconst_num_in_front_cam = 0;
     for(int i = 0; i < 4; ++i) {
       /*
-      std::cout << v_eig_T[i] << std::endl; 
+      std::cout << eK.inverse()*v_eig_T[i] << std::endl; 
       std::cout << "-----------------" << std::endl;
       */
       int count = 0;
       for(size_t n = 0; n < v_matches_01.size(); ++n) {
-        float x0 = v_pts0[n].pt.x;
-        float y0 = v_pts0[n].pt.y;
-        // float x1 = v_pts1[n].pt.x;
-        // float y1 = v_pts1[n].pt.y;
+        const float x0 = v_pts0[n].pt.x;
+        const float y0 = v_pts0[n].pt.y;
+        const float x1 = v_pts1[n].pt.x;
+        const float y1 = v_pts1[n].pt.y;
         Matrix44f A = Eigen::MatrixXf::Zero(4, 4);
         A.row(0) = x0*P.row(2) - P.row(0);
-        A.row(1) = x0*P.row(2) - P.row(1);
-        A.row(2) = x0*v_eig_T[i].row(2) - v_eig_T[i].row(0);
-        A.row(3) = x0*v_eig_T[i].row(2) - v_eig_T[i].row(1);
+        A.row(1) = y0*P.row(2) - P.row(1);
+        A.row(2) = x1*v_eig_T[i].row(2) - v_eig_T[i].row(0);
+        A.row(3) = y1*v_eig_T[i].row(2) - v_eig_T[i].row(1);
 
         SvdInTri svd(A, Eigen::ComputeFullU | Eigen::ComputeFullV);
-        Eigen::MatrixXf pt4D_0 = svd.matrixV().col(3)/svd.matrixV()(3,3);
+        // std::cout << svd.matrixV() << std::endl;
+        // std::cout << "==============================" << std::endl;
+        Eigen::MatrixXf Vt = svd.matrixV().transpose();
+        // Eigen::MatrixXf pt4D_0 = svd.matrixV().col(3)/svd.matrixV()(3,3);
+        // std::cout << Vt << std::endl;
+        Eigen::MatrixXf pt4D_0 = Vt.row(3).transpose();///Vt(3,3);
+        pt4D_0 = pt4D_0/pt4D_0(3);
+        // Eigen::MatrixXf pt4D_0 = svd.matrixV().block(0,0,3,3)/svd.matrixV()(3,3);
+        // std::cout << pt4D_0 << std::endl;
         Eigen::MatrixXf pt4D_1 = v_eig_T[i]*pt4D_0;
         if(pt4D_0(2) > 0.0 && pt4D_1(2) > 0.0) {
           ++count;
@@ -87,6 +89,7 @@ namespace Solver {
 
       if(count > reconst_num_in_front_cam) {
         reconst_num_in_front_cam = count;
+        std::cout << reconst_num_in_front_cam << std::endl;
         correct_solution_idx = i;
       }
     }
