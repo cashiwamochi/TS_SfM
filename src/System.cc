@@ -10,6 +10,8 @@
 #include "Map.h"
 #include "MapPoint.h"
 
+#include "Viewer.h"
+
 #include <functional>
 
 namespace TS_SfM {
@@ -270,6 +272,26 @@ namespace TS_SfM {
 
     // Convert frames to keyframes
     // All data should be inserted to Map
+
+    {
+      using namespace open3d;
+
+      utility::SetVerbosityLevel(utility::VerbosityLevel::Debug);
+
+      auto cloud_ptr = std::make_shared<geometry::PointCloud>();
+      std::vector<Eigen::Vector3d> vd_points;
+      for(int i = 0; i < 30; ++i) {
+        for(int j = 0; j < 30; ++j) {
+          Eigen::Vector3d vec3{(double)i, (double)j, 0.0};
+          vd_points.push_back(vec3);
+        }
+      }
+      cloud_ptr->points_ = vd_points;
+      cloud_ptr->NormalizeNormals();
+      visualization::DrawGeometries({cloud_ptr}, "PointCloud", 1600, 900);
+      utility::LogInfo("End of the test.\n");
+
+    }
 
     return num_map_points;
   }

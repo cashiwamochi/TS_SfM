@@ -72,15 +72,9 @@ namespace Solver {
         A.row(3) = y1*v_eig_T[i].row(2) - v_eig_T[i].row(1);
 
         SvdInTri svd(A, Eigen::ComputeFullU | Eigen::ComputeFullV);
-        // std::cout << svd.matrixV() << std::endl;
-        // std::cout << "==============================" << std::endl;
         Eigen::MatrixXf Vt = svd.matrixV().transpose();
-        // Eigen::MatrixXf pt4D_0 = svd.matrixV().col(3)/svd.matrixV()(3,3);
-        // std::cout << Vt << std::endl;
         Eigen::MatrixXf pt4D_0 = Vt.row(3).transpose();///Vt(3,3);
         pt4D_0 = pt4D_0/pt4D_0(3);
-        // Eigen::MatrixXf pt4D_0 = svd.matrixV().block(0,0,3,3)/svd.matrixV()(3,3);
-        // std::cout << pt4D_0 << std::endl;
         Eigen::MatrixXf pt4D_1 = v_eig_T[i]*pt4D_0;
         if(pt4D_0(2) > 0.0 && pt4D_1(2) > 0.0) {
           ++count;
