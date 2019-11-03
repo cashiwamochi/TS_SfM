@@ -7,6 +7,8 @@
 #include <Eigen/SVD>
 #include <Eigen/LU>
 
+#include <Open3D/Open3D.h>
+
 using Matrix33f = Eigen::Matrix<float,3,3>;
 using Matrix34f = Eigen::Matrix<float,3,4>;
 using Matrix44f = Eigen::Matrix<float,4,4>;
@@ -53,7 +55,7 @@ namespace Solver {
       const std::pair<std::vector<cv::KeyPoint>,std::vector<cv::KeyPoint>>& pair_vv_kpts,
       const std::vector<cv::DMatch>& v_matches,
       cv::Mat& F, std::vector<bool>& vb_mask, int& score,
-      int max_iteration = 400, float threshold = 1.5);
+      int max_iteration = 800, float threshold = 0.9);
 
   std::vector<float> ComputeEpipolarDistances(const std::vector<cv::KeyPoint>& pts0,
                                               const std::vector<cv::KeyPoint>& pts1,
@@ -148,11 +150,6 @@ namespace Solver {
 
     Eigen::MatrixXf V = svd_1st.matrixV();
     Eigen::Matrix<float, 3, 3> m;
-    // m << V(8,0), V(8,1), V(8,2),
-    //      V(8,3), V(8,4), V(8,5),
-    //      V(8,6), V(8,7), V(8,8);
-    // std::cout << "=====================" << std::endl;
-    // std::cout << V << std::endl;
     m << V(0,8), V(1,8), V(2,8),
          V(3,8), V(4,8), V(5,8),
          V(6,8), V(7,8), V(8,8);
@@ -160,30 +157,10 @@ namespace Solver {
     SvdInEight2nd svd_2nd(m, Eigen::ComputeFullU | Eigen::ComputeFullV);
     
     Eigen::MatrixXf diag = svd_2nd.singularValues().asDiagonal();
-    // std::cout << "=====================" << std::endl;
-    // std::cout << diag << std::endl;
-    // std::cout << "=====================" << std::endl;
-    // std::cout << svd_2nd.matrixU() << std::endl;
-    // std::cout << "=====================" << std::endl;
-    // std::cout << svd_2nd.matrixV() << std::endl;
-    // std::cout << "=====================" << std::endl;
     diag(2,2) = 0.0;
-    // std::cout << "=====================" << std::endl;
-    // std::cout << diag << std::endl;
     Eigen::Matrix<float, 3, 3> _F = svd_2nd.matrixU() * diag * svd_2nd.matrixV().transpose();
 
-    // std::cout << _F << std::endl;
-    // std::cout << "=====================" << std::endl;
-
-    F.at<float>(0,0) = _F(0,0);
-    F.at<float>(0,1) = _F(0,1);
-    F.at<float>(0,2) = _F(0,2);
-    F.at<float>(1,0) = _F(1,0);
-    F.at<float>(1,1) = _F(1,1);
-    F.at<float>(1,2) = _F(1,2);
-    F.at<float>(2,0) = _F(2,0);
-    F.at<float>(2,1) = _F(2,1);
-    F.at<float>(2,2) = _F(2,2);
+    eigen2cv(_F, F);
 
     score = Solver::EvaluateFUsingEight(pts0,pts1,F);
 
@@ -211,32 +188,61 @@ namespace Solver {
 
     Matrix34f eT_01;
     cv2eigen(T_01, eT_01);
+    std::cout << T_01 << std::endl;
+    std::cout << eT_01.block(0,0,3,3).determinant() << std::endl;
     eT_01 = eK * eT_01;
     
     int reconst_num_in_front_cam = 0;
 
+    std::vector<Eigen::Vector3d> vd_points;
     int count = 0;
     for(size_t n = 0; n < v_matches_01.size(); ++n) {
-      const float x0 = v_pts0[n].pt.x;
-      const float y0 = v_pts0[n].pt.y;
-      const float x1 = v_pts1[n].pt.x;
-      const float y1 = v_pts1[n].pt.y;
+      const float x0 = v_pts0[v_matches_01[n].queryIdx].pt.x;
+      const float y0 = v_pts0[v_matches_01[n].queryIdx].pt.y;
+      const float x1 = v_pts1[v_matches_01[n].trainIdx].pt.x;
+      const float y1 = v_pts1[v_matches_01[n].trainIdx].pt.y;
+
       Matrix44f A = Eigen::MatrixXf::Zero(4, 4);
       A.row(0) = x0*P.row(2) - P.row(0);
       A.row(1) = y0*P.row(2) - P.row(1);
       A.row(2) = x1*eT_01.row(2) - eT_01.row(0);
       A.row(3) = y1*eT_01.row(2) - eT_01.row(1);
   
-      SvdInTri svd(A, Eigen::ComputeFullU | Eigen::ComputeFullV);
+      // SvdInTri svd(A, Eigen::ComputeFullU | Eigen::ComputeFullV);
+      SvdInTri svd(A, Eigen::ComputeFullV);
+      // Eigen::JacobiSVD<Eigen::MatrixXf> svd(A, Eigen::ComputeThinV);
       Eigen::MatrixXf pt4D_0 = svd.matrixV().col(3)/svd.matrixV()(3,3);
       Eigen::MatrixXf pt4D_1 = eT_01*pt4D_0;
+
+      // Eigen::MatrixXf Vt = svd.matrixV().transpose();
+      // Eigen::MatrixXf pt4D_0 = Vt.row(3).transpose();///Vt(3,3);
+      // pt4D_0 = pt4D_0/pt4D_0(3);
+      // Eigen::MatrixXf pt4D_1 = eT_01*pt4D_0;
+
       if(pt4D_0(2) > 0.0 && pt4D_1(2) > 0.0) {
         ++count;
+        Eigen::Vector3d vec3{static_cast<double>(pt4D_0(0)), 
+                             static_cast<double>(pt4D_0(1)),
+                             static_cast<double>(pt4D_0(2))};
+        vd_points.push_back(vec3);
       }
     }
   
     if(count > reconst_num_in_front_cam) {
       reconst_num_in_front_cam = count;
+    }
+
+    {
+      using namespace open3d;
+
+      utility::SetVerbosityLevel(utility::VerbosityLevel::Debug);
+
+      auto cloud_ptr = std::make_shared<geometry::PointCloud>();
+      cloud_ptr->points_ = vd_points;
+      cloud_ptr->NormalizeNormals();
+      visualization::DrawGeometries({cloud_ptr}, "pointcloud", 1600, 900);
+      utility::LogInfo("end of the test.\n");
+
     }
 
     std::cout << reconst_num_in_front_cam << std::endl;

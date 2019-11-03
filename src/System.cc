@@ -71,7 +71,7 @@ namespace TS_SfM {
 
         cv::circle(image0, cv::Point((int)vkpts0[i].pt.x, (int)vkpts0[i].pt.y), 3,cv::Scalar(0,0,255), 2);
       
-        i += 80;
+        i += 30;
         line_num++;
       } 
     }
@@ -273,6 +273,7 @@ namespace TS_SfM {
     // Convert frames to keyframes
     // All data should be inserted to Map
 
+#if 0
     {
       using namespace open3d;
 
@@ -292,6 +293,7 @@ namespace TS_SfM {
       utility::LogInfo("End of the test.\n");
 
     }
+#endif
 
     return num_map_points;
   }

@@ -29,8 +29,8 @@ Extractor.desctiptor: AKAZE #or ORB
 Extractor.threshold: 0.00001 # 0,001 is default 
 Extractor.octaves: 4 # 4 is default
 Extractor.octavelayers: 4 # 4 is default
-Extractor.grid_width: 100 # 100 is default
-Extractor.grid_height: 100 # 100 is default
+Extractor.grid_width: 130 # 100 is default
+Extractor.grid_height: 130 # 100 is default
 Extractor.num_in_grid: 30 # 30 is default
 
 Matcher.check_type: CrossCheck # RatioTest or CrossRatioTest

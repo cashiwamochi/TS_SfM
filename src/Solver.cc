@@ -31,19 +31,31 @@ namespace Solver {
     Matrix34f eig_T;
 
     eig_T.block(0,0,3,3) = U * W * Vt;
+    if(eig_T.block(0,0,3,3).determinant() < 0.0) {
+      eig_T.block(0,0,3,3) *= -1.0;
+    }
     eig_T.col(3) = U.col(2)/U.col(2).norm();
     v_eig_T.push_back(eK*eig_T);
     
     eig_T.block(0,0,3,3) = U * W * Vt;
     eig_T.col(3) = -U.col(2)/U.col(2).norm();
+    if(eig_T.block(0,0,3,3).determinant() < 0.0) {
+      eig_T.block(0,0,3,3) *= -1.0;
+    }
     v_eig_T.push_back(eK*eig_T);
     
     eig_T.block(0,0,3,3) = U * W.transpose() * Vt;
     eig_T.col(3) = U.col(2)/U.col(2).norm();
+    if(eig_T.block(0,0,3,3).determinant() < 0.0) {
+      eig_T.block(0,0,3,3) *= -1.0;
+    }
     v_eig_T.push_back(eK*eig_T);
     
     eig_T.block(0,0,3,3) = U * W.transpose() * Vt;
     eig_T.col(3) = -U.col(2)/U.col(2).norm();
+    if(eig_T.block(0,0,3,3).determinant() < 0.0) {
+      eig_T.block(0,0,3,3) *= -1.0;
+    }
     v_eig_T.push_back(eK*eig_T);
 
     Matrix34f P;
@@ -61,17 +73,17 @@ namespace Solver {
       */
       int count = 0;
       for(size_t n = 0; n < v_matches_01.size(); ++n) {
-        const float x0 = v_pts0[n].pt.x;
-        const float y0 = v_pts0[n].pt.y;
-        const float x1 = v_pts1[n].pt.x;
-        const float y1 = v_pts1[n].pt.y;
+        const float x0 = v_pts0[v_matches_01[n].queryIdx].pt.x;
+        const float y0 = v_pts0[v_matches_01[n].queryIdx].pt.y;
+        const float x1 = v_pts1[v_matches_01[n].trainIdx].pt.x;
+        const float y1 = v_pts1[v_matches_01[n].trainIdx].pt.y;
         Matrix44f A = Eigen::MatrixXf::Zero(4, 4);
         A.row(0) = x0*P.row(2) - P.row(0);
         A.row(1) = y0*P.row(2) - P.row(1);
         A.row(2) = x1*v_eig_T[i].row(2) - v_eig_T[i].row(0);
         A.row(3) = y1*v_eig_T[i].row(2) - v_eig_T[i].row(1);
 
-        SvdInTri svd(A, Eigen::ComputeFullU | Eigen::ComputeFullV);
+        SvdInTri svd(A, Eigen::ComputeFullV);
         Eigen::MatrixXf Vt = svd.matrixV().transpose();
         Eigen::MatrixXf pt4D_0 = Vt.row(3).transpose();///Vt(3,3);
         pt4D_0 = pt4D_0/pt4D_0(3);
@@ -83,10 +95,12 @@ namespace Solver {
 
       if(count > reconst_num_in_front_cam) {
         reconst_num_in_front_cam = count;
-        std::cout << reconst_num_in_front_cam << std::endl;
+        // std::cout << reconst_num_in_front_cam << std::endl;
         correct_solution_idx = i;
       }
     }
+    
+    std::cout << correct_solution_idx << std::endl;
 
     Matrix34f eT = eK.inverse()*v_eig_T[correct_solution_idx]; 
     eigen2cv(eT, T_01);
@@ -110,7 +124,7 @@ namespace Solver {
     if(v_matches.size() < min_num_matches) {
       is_solved = false; 
     }
-    else{
+    else {
       // Generate RANSAC random sample idx
       std::mt19937_64 mt(std::random_device{}());
       std::uniform_int_distribution<int> dist(0, (int)v_matches.size()-1);
@@ -146,7 +160,7 @@ namespace Solver {
 
         float score_8 = ComputeEightPointsAlgorithm(v_pts0, v_pts1, current_F);
 
-        if(score_8 > 2.0) {
+        if(score_8 > 1.5) {
 #if 0
           cv::Mat m_output;
           cv::drawMatches(image0, pair_vv_kpts.first,
@@ -179,6 +193,15 @@ namespace Solver {
           best_F = current_F.clone();
           best_mask = current_mask;
           is_solved = true;
+#if 0
+          cv::Mat m_output;
+          cv::drawMatches(image0, pair_vv_kpts.first,
+                          image1, pair_vv_kpts.second,
+                          v_matches_01_ransac, m_output);
+
+          cv::imshow("viewer-matches-ransac", m_output);
+          cv::waitKey(0);
+#endif
         }
       }
 
