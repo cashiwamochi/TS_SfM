@@ -189,6 +189,52 @@ namespace TS_SfM {
     int center_frame_idx = (int)(v_frames.size() - 1)/2;
     int distance_to_edge = (int)v_frames.size() - center_frame_idx;
 
+    // Initialization using 2 views geometry
+    std::vector<KeyFrame> v_keyframes(v_frames.size());
+    std::vector<MapPoint> v_mappoints;
+    {
+      const int src_frame_idx = center_frame_idx;
+      const int dst_frame_idx = center_frame_idx + 1;
+      Frame& src_frame = v_frames[src_frame_idx].get();
+      Frame& dst_frame = v_frames[dst_frame_idx].get();
+
+      std::vector<cv::DMatch> v_matches = vv_matches[src_frame_idx];
+      cv::Mat mF;
+      std::vector<bool> vb_mask;
+      int score;
+      Solver::SolveEpipolarConstraintRANSAC(src_frame.GetImage(), dst_frame.GetImage(),  
+                                            std::make_pair(src_frame.GetKeyPoints(),dst_frame.GetKeyPoints()),
+                                            v_matches, mF, vb_mask, score);
+
+      std::vector<cv::DMatch> _v_matches = v_matches;
+      v_matches.clear();
+      for(size_t i = 0; i < _v_matches.size(); i++) {
+        if(vb_mask[i])  {
+          v_matches.push_back(_v_matches[i]); 
+        }
+      }
+
+      std::cout << "Score = " << score
+                << " / " << _v_matches.size() <<  std::endl;
+
+      if(false) DrawEpiLines(src_frame, dst_frame, v_matches, vb_mask, mF);
+
+      // decompose E
+      cv::Mat mE = mK.t() * mF * mK;
+      cv::Mat T_01 = Solver::DecomposeE(src_frame.GetKeyPoints(), dst_frame.GetKeyPoints(), v_matches, mK, mE);
+      src_frame.SetMatchesToNew(v_matches);
+      dst_frame.SetMatchesToOld(v_matches);
+
+      // Triangulation
+      std::vector<cv::Point3f> v_pts_3d = Solver::Triangulate(src_frame.GetKeyPoints(),
+                                                              dst_frame.GetKeyPoints(),
+                                                              v_matches, mK, T_01); 
+
+      v_keyframes[src_frame_idx] = KeyFrame(src_frame);
+      v_keyframes[dst_frame_idx] = KeyFrame(dst_frame);
+    }
+
+#if 0
     for(int step_from_center = 0; step_from_center < distance_to_edge-1; ++step_from_center) {
       if(center_frame_idx+step_from_center < (int)v_frames.size()) {
         // We compute matches from old to new always
@@ -269,6 +315,7 @@ namespace TS_SfM {
 
       }
     }
+#endif
 
     // Convert frames to keyframes
     // All data should be inserted to Map

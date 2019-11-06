@@ -11,6 +11,4 @@ namespace TS_SfM {
   
   }
 
-
-
 }; // namespace 

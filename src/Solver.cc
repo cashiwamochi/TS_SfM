@@ -67,10 +67,6 @@ namespace Solver {
     int correct_solution_idx = -1;
     int reconst_num_in_front_cam = 0;
     for(int i = 0; i < 4; ++i) {
-      /*
-      std::cout << eK.inverse()*v_eig_T[i] << std::endl; 
-      std::cout << "-----------------" << std::endl;
-      */
       int count = 0;
       for(size_t n = 0; n < v_matches_01.size(); ++n) {
         const float x0 = v_pts0[v_matches_01[n].queryIdx].pt.x;
@@ -84,9 +80,7 @@ namespace Solver {
         A.row(3) = y1*v_eig_T[i].row(2) - v_eig_T[i].row(1);
 
         SvdInTri svd(A, Eigen::ComputeFullV);
-        Eigen::MatrixXf Vt = svd.matrixV().transpose();
-        Eigen::MatrixXf pt4D_0 = Vt.row(3).transpose();///Vt(3,3);
-        pt4D_0 = pt4D_0/pt4D_0(3);
+        Eigen::MatrixXf pt4D_0 = svd.matrixV().col(3)/svd.matrixV()(3,3);
         Eigen::MatrixXf pt4D_1 = v_eig_T[i]*pt4D_0;
         if(pt4D_0(2) > 0.0 && pt4D_1(2) > 0.0) {
           ++count;
@@ -95,13 +89,10 @@ namespace Solver {
 
       if(count > reconst_num_in_front_cam) {
         reconst_num_in_front_cam = count;
-        // std::cout << reconst_num_in_front_cam << std::endl;
         correct_solution_idx = i;
       }
     }
     
-    std::cout << correct_solution_idx << std::endl;
-
     Matrix34f eT = eK.inverse()*v_eig_T[correct_solution_idx]; 
     eigen2cv(eT, T_01);
 

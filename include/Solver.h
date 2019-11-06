@@ -188,8 +188,6 @@ namespace Solver {
 
     Matrix34f eT_01;
     cv2eigen(T_01, eT_01);
-    std::cout << T_01 << std::endl;
-    std::cout << eT_01.block(0,0,3,3).determinant() << std::endl;
     eT_01 = eK * eT_01;
     
     int reconst_num_in_front_cam = 0;
@@ -208,16 +206,9 @@ namespace Solver {
       A.row(2) = x1*eT_01.row(2) - eT_01.row(0);
       A.row(3) = y1*eT_01.row(2) - eT_01.row(1);
   
-      // SvdInTri svd(A, Eigen::ComputeFullU | Eigen::ComputeFullV);
       SvdInTri svd(A, Eigen::ComputeFullV);
-      // Eigen::JacobiSVD<Eigen::MatrixXf> svd(A, Eigen::ComputeThinV);
       Eigen::MatrixXf pt4D_0 = svd.matrixV().col(3)/svd.matrixV()(3,3);
       Eigen::MatrixXf pt4D_1 = eT_01*pt4D_0;
-
-      // Eigen::MatrixXf Vt = svd.matrixV().transpose();
-      // Eigen::MatrixXf pt4D_0 = Vt.row(3).transpose();///Vt(3,3);
-      // pt4D_0 = pt4D_0/pt4D_0(3);
-      // Eigen::MatrixXf pt4D_1 = eT_01*pt4D_0;
 
       if(pt4D_0(2) > 0.0 && pt4D_1(2) > 0.0) {
         ++count;
@@ -232,6 +223,7 @@ namespace Solver {
       reconst_num_in_front_cam = count;
     }
 
+#if 0
     {
       using namespace open3d;
 
@@ -242,10 +234,8 @@ namespace Solver {
       cloud_ptr->NormalizeNormals();
       visualization::DrawGeometries({cloud_ptr}, "pointcloud", 1600, 900);
       utility::LogInfo("end of the test.\n");
-
     }
-
-    std::cout << reconst_num_in_front_cam << std::endl;
+#endif
 
     return v_pt3D;
   }
