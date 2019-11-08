@@ -31,7 +31,13 @@ namespace TS_SfM {
       std::vector<std::vector<unsigned int>> GetGridKeyPointsNum() const;
       unsigned int GetAssignedKeyPointsNum() const;
 
-      void SetPose (const cv::Mat& _cTw) {m_m_cTw = _cTw.clone();};
+      void SetPose (const cv::Mat& _cTw) {
+        m_m_cTw = _cTw.clone();
+        m_m_wTc = cv::Mat::zeros(3,4,_cTw.type());
+        m_m_wTc.rowRange(0,3).colRange(0,3) = _cTw.rowRange(0,3).colRange(0,3).t();
+        m_m_wTc.rowRange(0,3).col(3) = -1.0
+                                      *_cTw.rowRange(0,3).colRange(0,3).t() * _cTw.rowRange(0,3).col(3);
+      };
       inline void SetMatchesToOld(const std::vector<cv::DMatch>& _v_matches_01) {
         m_v_matches_to_old.clear();
         m_v_matches_to_old.reserve(_v_matches_01.size());
@@ -51,6 +57,7 @@ namespace TS_SfM {
       const cv::Mat m_m_image;
       bool m_is_key;
       cv::Mat m_m_cTw; // (4 x 4, CV_F32C1)
+      cv::Mat m_m_wTc; // (4 x 4, CV_F32C1)
 
       // original data
       std::vector<cv::KeyPoint> m_v_kpts;

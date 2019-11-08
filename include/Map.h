@@ -23,5 +23,4 @@ namespace TS_SfM {
       std::list<MapPoint> m_l_map_point;
       std::list<KeyFrame> m_l_keyframe;
   };
-
 } // namespace

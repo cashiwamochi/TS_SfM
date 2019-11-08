@@ -88,6 +88,7 @@ add_library(
   src/Viewer.cc
   src/LoopClosure.cc
   src/ConfigLoader.cc
+  src/Utils.cc
 )
 
 target_link_libraries(

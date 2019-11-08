@@ -175,7 +175,7 @@ namespace Solver {
 
   {
     std::vector<cv::Point3f> v_pt3D;
-    v_pt3D.resize(v_matches_01.size()); 
+    // v_pt3D.resize(v_matches_01.size()); 
 
     Matrix33f eK;
     cv2eigen(K, eK);
@@ -236,6 +236,10 @@ namespace Solver {
       utility::LogInfo("end of the test.\n");
     }
 #endif
+
+    for(auto pt : vd_points) {
+      v_pt3D.push_back(cv::Point3f((float)pt.x(), (float)pt.y(), (float)pt.z()));
+    }
 
     return v_pt3D;
   }

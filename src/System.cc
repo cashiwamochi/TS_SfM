@@ -12,6 +12,8 @@
 
 #include "Viewer.h"
 
+#include "Utils.h"
+
 #include <functional>
 
 namespace TS_SfM {
@@ -229,6 +231,19 @@ namespace TS_SfM {
       std::vector<cv::Point3f> v_pts_3d = Solver::Triangulate(src_frame.GetKeyPoints(),
                                                               dst_frame.GetKeyPoints(),
                                                               v_matches, mK, T_01); 
+
+      src_frame.SetPose(cv::Mat::eye(3,4,CV_32FC1));
+      dst_frame.SetPose(T_01);
+
+      int _i = 0;
+      for(auto pt_3d : v_pts_3d) {
+        // std::cout << _i << "L"<< v_pts_3d.size() <<std::endl;
+        MapPoint mappoint(pt_3d); 
+        cv::Mat desc = ChoiseDescriptor(src_frame, dst_frame, pt_3d, v_matches[_i]);
+        _i++;
+      }
+      // std::cout << "hoge" << std::endl;
+
 
       v_keyframes[src_frame_idx] = KeyFrame(src_frame);
       v_keyframes[dst_frame_idx] = KeyFrame(dst_frame);
