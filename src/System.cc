@@ -239,7 +239,7 @@ namespace TS_SfM {
       for(auto pt_3d : v_pts_3d) {
         // std::cout << _i << "L"<< v_pts_3d.size() <<std::endl;
         MapPoint mappoint(pt_3d); 
-        cv::Mat desc = ChoiseDescriptor(src_frame, dst_frame, pt_3d, v_matches[_i]);
+        cv::Mat desc = ChooseDescriptor(src_frame, dst_frame, pt_3d, v_matches[_i]);
         _i++;
       }
       // std::cout << "hoge" << std::endl;

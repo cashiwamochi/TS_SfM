@@ -5,6 +5,6 @@
 
 namespace TS_SfM{
   class Frame;
-  cv::Mat ChoiseDescriptor(const Frame& f0, const Frame& f1,
+  cv::Mat ChooseDescriptor(const Frame& f0, const Frame& f1,
                            const cv::Point3f& p, const cv::DMatch& match);
 }

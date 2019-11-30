@@ -4,7 +4,7 @@
 #include <cmath>
 
 namespace TS_SfM {
-  cv::Mat ChoiseDescriptor(const Frame& f0, const Frame& f1,
+  cv::Mat ChooseDescriptor(const Frame& f0, const Frame& f1,
                            const cv::Point3f& p, const cv::DMatch& match)
   {
     cv::Mat m_desc;
