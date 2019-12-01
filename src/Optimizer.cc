@@ -3,7 +3,47 @@
 using namespace Eigen;
 using namespace std;
 
+namespace TS_SfM {
 
+
+void Optimizer::Run() {
+
+  return;
+}
+
+bool Optimizer::SetData() {
+
+  return false;
+}
+
+
+// Firstly i will implement a simple optimizer for verification.
+void BundleAdjustmentBeta() {
+
+
+
+
+
+
+  return;
+}
+
+
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+#if 0
 class Sample {
 public:
   static int uniform(int from, int to);
@@ -250,3 +290,4 @@ int test(int argc, const char* argv[]){
   cout << "Point error after optimisation (inliers only): " << sqrt(sum_diff2/inliers.size()) << endl;
   cout << endl;
 }
+#endif

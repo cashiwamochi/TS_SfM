@@ -5,6 +5,7 @@
 
 #include "Matcher.h"
 #include "Solver.h"
+#include "Optimizer.h"
 
 #include "Reconstructor.h"
 #include "Map.h"
@@ -188,8 +189,7 @@ namespace TS_SfM {
                                           0.0, m_camera.f_fy, m_camera.f_cy,
                                           0.0,           0.0,           1.0);
 
-    int center_frame_idx = (int)(v_frames.size() - 1)/2;
-    int distance_to_edge = (int)v_frames.size() - center_frame_idx;
+    const int center_frame_idx = (int)(v_frames.size() - 1)/2;
 
     std::vector<KeyFrame> v_keyframes(v_frames.size());
     std::vector<MapPoint> v_mappoints;
@@ -267,28 +267,23 @@ namespace TS_SfM {
         for(int direction : v_direction) {
           int src_frame_idx = direction*dist_from_center_to_src + center_frame_idx;
           int dst_frame_idx = src_frame_idx + direction;
+          std::cout << src_frame_idx << ":" << dst_frame_idx << std::endl;
 
           ///////////////////////////////////////////////////////////////////
           if(dst_frame_idx < src_frame_idx) {
             std::swap(dst_frame_idx, src_frame_idx);
           }
 
-          if(src_frame_idx < 0 || dst_frame_idx > (int)v_frames.size()-1) {
+          if(CheckIndex(src_frame_idx, dst_frame_idx, vb_initialized, (int)v_frames.size())) {
             is_done = true;
-            // Initialization is finised.
             break;
-          }
+          } 
 
           if(vb_initialized[src_frame_idx] && vb_initialized[dst_frame_idx]) {
             // This case was used already.
             continue;
           }
 
-          if(!vb_initialized[src_frame_idx] && !vb_initialized[dst_frame_idx]) {
-            // This case should not happend.
-            std::cout << "[Warning] Wrong case, need to check !\n";
-            break;
-          }
           ///////////////////////////////////////////////////////////////////
 
           Frame& src_frame = v_frames[src_frame_idx].get();
@@ -354,6 +349,13 @@ namespace TS_SfM {
             vb_initialized[dst_frame_idx] = true;
           else
             vb_initialized[src_frame_idx] = true;
+
+          // Optimization would be processed here.
+           {
+
+           }
+
+
         }
       }
     }

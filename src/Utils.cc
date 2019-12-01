@@ -32,4 +32,21 @@ namespace TS_SfM {
    
     return m_desc;
   };
+
+  bool CheckIndex(const int& src_frame_idx, const int& dst_frame_idx,
+      const std::vector<bool>& vb_initialized, const int length){
+
+    if(src_frame_idx < 0 || dst_frame_idx > (int)length-1) {
+      // Initialization is finised.
+      return true;
+    }
+
+    if(!vb_initialized[src_frame_idx] && !vb_initialized[dst_frame_idx]) {
+      // This case should not happend.
+      std::cout << "[Warning] Wrong case, need to check !\n";
+      return true;
+    }
+
+    return false;
+  }
 }
