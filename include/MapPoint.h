@@ -6,19 +6,12 @@
 #include <opencv2/opencv.hpp>
 
 namespace TS_SfM {
-
-  class MapPoint {
-    struct Pos {
-      float x;
-      float y;
-      float z;
-    };
-
     struct MatchInfo {
       int frame_id;
       int kpt_id;
     };
 
+  class MapPoint {
     public:
       MapPoint(){};
       MapPoint(cv::Point3f pt) {
@@ -38,7 +31,7 @@ namespace TS_SfM {
         m_v_match_info.push_back(_match_info);
       }
 
-      void SetDesctiptor(const cv::Mat& _desc) {
+      void SetDescriptor(const cv::Mat& _desc) {
         m_m_descriptor = _desc.clone();
       }
 
@@ -46,6 +39,7 @@ namespace TS_SfM {
         if(m_m_descriptor.empty() || m_v_match_info.size() == 0)
         {
           m_is_activated = false;
+          std::cout << "[Warning] MapPoint hasn't beed activated.\n";
         }
         else {
           m_is_activated = true;
@@ -55,7 +49,7 @@ namespace TS_SfM {
 
 
     private:
-      Pos m_pos;
+      cv::Point3f m_pos;
       cv::Mat m_m_descriptor;
       std::vector<MatchInfo> m_v_match_info;
       bool m_is_activated;

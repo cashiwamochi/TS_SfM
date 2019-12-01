@@ -191,9 +191,12 @@ namespace TS_SfM {
     int center_frame_idx = (int)(v_frames.size() - 1)/2;
     int distance_to_edge = (int)v_frames.size() - center_frame_idx;
 
-    // Initialization using 2 views geometry
     std::vector<KeyFrame> v_keyframes(v_frames.size());
     std::vector<MapPoint> v_mappoints;
+    std::vector<bool> vb_initialized(v_frames.size());
+
+    // Initialization using 2 views geometry
+    // This is initializatio in initialization.
     {
       const int src_frame_idx = center_frame_idx;
       const int dst_frame_idx = center_frame_idx + 1;
@@ -240,13 +243,119 @@ namespace TS_SfM {
         // std::cout << _i << "L"<< v_pts_3d.size() <<std::endl;
         MapPoint mappoint(pt_3d); 
         cv::Mat desc = ChooseDescriptor(src_frame, dst_frame, pt_3d, v_matches[_i]);
+        mappoint.SetDescriptor(desc);
+        std::vector<MatchInfo> v_match_info(2);
+        v_match_info[0] = MatchInfo{src_frame.m_id, v_matches[_i].queryIdx};
+        v_match_info[1] = MatchInfo{dst_frame.m_id, v_matches[_i].trainIdx};
+        mappoint.SetMatchInfo(v_match_info);
+        if(mappoint.Activate()) {
+          v_mappoints.push_back(mappoint);
+        }
         _i++;
       }
-      // std::cout << "hoge" << std::endl;
-
 
       v_keyframes[src_frame_idx] = KeyFrame(src_frame);
       v_keyframes[dst_frame_idx] = KeyFrame(dst_frame);
+      vb_initialized[src_frame_idx] = vb_initialized[dst_frame_idx] = true;
+    }
+
+    // Do initialization using Map build in 2-view reconstruction.
+    {
+      bool is_done = false;
+      for(int dist_from_center_to_src = 0; !is_done ;dist_from_center_to_src++) {
+        std::vector<int> v_direction = {1,-1}; // forward and backward
+        for(int direction : v_direction) {
+          int src_frame_idx = direction*dist_from_center_to_src + center_frame_idx;
+          int dst_frame_idx = src_frame_idx + direction;
+
+          ///////////////////////////////////////////////////////////////////
+          if(dst_frame_idx < src_frame_idx) {
+            std::swap(dst_frame_idx, src_frame_idx);
+          }
+
+          if(src_frame_idx < 0 || dst_frame_idx > (int)v_frames.size()-1) {
+            is_done = true;
+            // Initialization is finised.
+            break;
+          }
+
+          if(vb_initialized[src_frame_idx] && vb_initialized[dst_frame_idx]) {
+            // This case was used already.
+            continue;
+          }
+
+          if(!vb_initialized[src_frame_idx] && !vb_initialized[dst_frame_idx]) {
+            // This case should not happend.
+            std::cout << "[Warning] Wrong case, need to check !\n";
+            break;
+          }
+          ///////////////////////////////////////////////////////////////////
+
+          Frame& src_frame = v_frames[src_frame_idx].get();
+          Frame& dst_frame = v_frames[dst_frame_idx].get();
+
+          std::vector<cv::DMatch> v_matches = vv_matches[src_frame_idx];
+          cv::Mat mF;
+          std::vector<bool> vb_mask;
+          int score;
+          Solver::SolveEpipolarConstraintRANSAC(src_frame.GetImage(), dst_frame.GetImage(),  
+                                                std::make_pair(src_frame.GetKeyPoints(),dst_frame.GetKeyPoints()),
+                                                v_matches, mF, vb_mask, score);
+
+          std::vector<cv::DMatch> _v_matches = v_matches;
+          v_matches.clear();
+          for(size_t i = 0; i < _v_matches.size(); i++) {
+            if(vb_mask[i])  {
+              v_matches.push_back(_v_matches[i]); 
+            }
+          }
+
+          std::cout << "Score = " << score
+                    << " / " << _v_matches.size() <<  std::endl;
+
+          if(false) DrawEpiLines(src_frame, dst_frame, v_matches, vb_mask, mF);
+
+          // decompose E
+          cv::Mat mE = mK.t() * mF * mK;
+          cv::Mat T_01 = Solver::DecomposeE(src_frame.GetKeyPoints(), dst_frame.GetKeyPoints(), v_matches, mK, mE);
+          src_frame.SetMatchesToNew(v_matches);
+          dst_frame.SetMatchesToOld(v_matches);
+
+          // Triangulation
+          std::vector<cv::Point3f> v_pts_3d = Solver::Triangulate(src_frame.GetKeyPoints(),
+                                                                  dst_frame.GetKeyPoints(),
+                                                                  v_matches, mK, T_01); 
+
+          src_frame.SetPose(cv::Mat::eye(3,4,CV_32FC1));
+          dst_frame.SetPose(T_01);
+
+          int _i = 0;
+          for(auto pt_3d : v_pts_3d) {
+            // std::cout << _i << "L"<< v_pts_3d.size() <<std::endl;
+            MapPoint mappoint(pt_3d); 
+            cv::Mat desc = ChooseDescriptor(src_frame, dst_frame, pt_3d, v_matches[_i]);
+            mappoint.SetDescriptor(desc);
+            std::vector<MatchInfo> v_match_info(2);
+            v_match_info[0] = MatchInfo{src_frame.m_id, v_matches[_i].queryIdx};
+            v_match_info[1] = MatchInfo{dst_frame.m_id, v_matches[_i].trainIdx};
+            mappoint.SetMatchInfo(v_match_info);
+            if(mappoint.Activate()) {
+              v_mappoints.push_back(mappoint);
+            }
+            _i++;
+          }
+
+          if(!vb_initialized[src_frame_idx])
+            v_keyframes[src_frame_idx] = KeyFrame(src_frame);
+          if(!vb_initialized[dst_frame_idx])
+            v_keyframes[dst_frame_idx] = KeyFrame(dst_frame);
+
+          if(direction == 1)
+            vb_initialized[dst_frame_idx] = true;
+          else
+            vb_initialized[src_frame_idx] = true;
+        }
+      }
     }
 
 #if 0
@@ -370,7 +479,7 @@ namespace TS_SfM {
     InitializeFrames(m_v_frames, m_vm_images, m_p_extractor);
 
     std::vector<std::reference_wrapper<Frame>> 
-      v_ini_frames{m_v_frames[0], m_v_frames[1],m_v_frames[2]};
+      v_ini_frames{m_v_frames[0], m_v_frames[1],m_v_frames[2],m_v_frames[3],m_v_frames[4],m_v_frames[5]};
 #if 0
     InitializeGlobalMap(v_ini_frames);
 #else

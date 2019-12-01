@@ -29,7 +29,6 @@ namespace TS_SfM {
     else {
       m_desc = f1.GetDescriptors().row(match.trainIdx);
     }
-  
    
     return m_desc;
   };
