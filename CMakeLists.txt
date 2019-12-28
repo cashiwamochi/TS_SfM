@@ -7,7 +7,7 @@ set(CMAKE_CXX_COMPILER g++)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -O2")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++14 -O2")
 
-list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
+list(APPEND CMAKE_MODULE_PATH ~/source/g2o/cmake_modules)
 
 set(OpenCV_DIR ~/.local/OpenCV410/lib/cmake/opencv4/)
 # set(OpenCV_DIR ~/.local/OpenCV401/lib/cmake/opencv4/)
@@ -40,32 +40,33 @@ ENDIF()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Open3D_CXX_FLAGS}")
 
-find_package(Cholmod)
+find_package(Cholmod REQUIRED)
 find_package(BLAS)
 find_package(LAPACK)
 find_package(CSparse)
 
-set(G2O_ROOT /home/ryotaro/.local/g2o)
-find_package(G2O REQUIRED)
-IF (G2O_FOUND)
-  # include_directories(${G2O_INCLUDE_DIRS})
-  # link_directories(${G2O_LIBRARY_DIRS})
-  message([G2O_INCLUDE_DIRS]: ${G2O_INCLUDE_DIRS})
-  message([G2O_LIBRARY_DIRS]: ${G2O_LIBRARY_DIRS})
-  message([G2O_LIBRARIES]: ${G2O_LIBRARIES})
-ENDIF()
-
+set(G2O_ROOT ~/.local/g2o)
+# find_package(G2O REQUIRED)
+# IF (G2O_FOUND)
+#   # include_directories(${G2O_INCLUDE_DIRS})
+#   # link_directories(${G2O_LIBRARY_DIRS})
+#   message([G2O_INCLUDE_DIRS]: ${G2O_INCLUDE_DIRS})
+#   message([G2O_LIBRARY_DIRS]: ${G2O_LIBRARY_DIRS})
+#   message([G2O_LIBRARIES]: ${G2O_LIBRARIES})
+# ENDIF()
+#
 include_directories(
   ${PROJECT_SOURCE_DIR}/include
   ${CHOLMOD_INCLUDE_DIR}
   ${OpenCV_INCLUDE_DIRS}
   ${Open3D_INCLUDE_DIRS}
-  ${G2O_INCLUDE_DIRS}
+  ${G2O_ROOT}/include
   /usr/inluce/eigen3
 )
 
 link_directories(
-  ${G2O_LIBRARY_DIRS}
+  ${G2O_ROOT}/lib
+  # /mnt/akane0/workspace/ts_sfm_ws/ST_SfM/third_party/g2o/lib/
   ${Open3D_LIBRARY_DIRS}
 )
 
@@ -95,7 +96,19 @@ target_link_libraries(
   ${PROJECT_NAME}
   ${OpenCV_LIBRARIES}
   ${Open3D_LIBRARIES}
-  ${G2O_LIBRARIES}
+  # ${G2O_LIBRARIES}
+  libg2o_types_data.so
+  libg2o_core.so
+  libg2o_solver_cholmod.so
+  libg2o_types_sba.so
+  libg2o_solver_dense.so
+  libg2o_solver_eigen.so
+  libg2o_types_sim3.so
+  libg2o_solver_structure_only.so
+  libg2o_types_slam3d_addons.so
+  libg2o_stuff.so
+  libg2o_types_slam3d.so
+  ${CHOLMOD_LIBRARIES}
 )
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/build/bin)

@@ -26,6 +26,7 @@ bool Optimizer::SetData() {
                             std::vector<MapPoint> v_mappoints, const Camera& cam)
 {
   BAResult result;
+#if 1
   g2o::SparseOptimizer optimizer;
   optimizer.setVerbose(true);
   std::unique_ptr<g2o::BlockSolver_6_3::LinearSolverType> linearSolver;
@@ -37,6 +38,31 @@ bool Optimizer::SetData() {
   );
   optimizer.setAlgorithm(solver);
 
+#else
+
+   // Setup optimizer
+	g2o::SparseOptimizer optimizer;
+
+	/*// old approach
+	g2o::BlockSolverX::LinearSolverType * linearSolver;
+
+	linearSolver = new g2o::LinearSolverEigen<g2o::BlockSolverX::PoseMatrixType>();
+
+	g2o::BlockSolverX * solver_ptr = new g2o::BlockSolverX(linearSolver);
+
+	//g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(solver_ptr);
+	*/
+
+	// fix with std::unique_ptr, linear solver:
+	std::unique_ptr<g2o::BlockSolverX::LinearSolverType> linearSolver 
+				(new g2o::LinearSolverEigen<g2o::BlockSolverX::PoseMatrixType>());
+
+	// fix with std::unique_ptr, solver_ptr:
+	std::unique_ptr<g2o::BlockSolverX> solver_ptr (new g2o::BlockSolverX(std::move(linearSolver)));
+
+//	g2o::OptimizationAlgorithmLevenberg * solver = new g2o::OptimizationAlgorithmLevenberg(std::move(solver_ptr));
+
+#endif
 
 
 

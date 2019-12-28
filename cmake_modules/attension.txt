@@ -1,2 +1,0 @@
-These cmake scripts are from https://github.com/RainerKuemmerle/g2o/tree/master/cmake_modules
-Not my original scripts
