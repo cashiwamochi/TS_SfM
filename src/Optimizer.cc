@@ -1,4 +1,8 @@
 #include "Optimizer.h"
+#include "ConfigLoader.h"
+#include "KeyFrame.h"
+#include "Map.h"
+#include "MapPoint.h"
 
 using namespace Eigen;
 using namespace std;
@@ -18,14 +22,26 @@ bool Optimizer::SetData() {
 
 
 // Firstly i will implement a simple optimizer for verification.
-void BundleAdjustmentBeta() {
+  BAResult BundleAdjustmentBeta(std::vector<KeyFrame> v_keyframes,
+                            std::vector<MapPoint> v_mappoints, const Camera& cam)
+{
+  BAResult result;
+  g2o::SparseOptimizer optimizer;
+  optimizer.setVerbose(true);
+  std::unique_ptr<g2o::BlockSolver_6_3::LinearSolverType> linearSolver;
+
+  linearSolver = g2o::make_unique<g2o::LinearSolverCholmod<g2o::BlockSolver_6_3::PoseMatrixType>>();
+
+  g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(
+    g2o::make_unique<g2o::BlockSolver_6_3>(std::move(linearSolver))
+  );
+  optimizer.setAlgorithm(solver);
 
 
 
 
 
-
-  return;
+  return result;
 }
 
 

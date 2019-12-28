@@ -10,7 +10,7 @@ namespace TS_SfM {
   class KeyFrame{
     public:
       KeyFrame(const Frame& f);
-      KeyFrame(){};
+      KeyFrame(){m_b_activated=false;};
       ~KeyFrame(){};
 
       int m_id;
@@ -25,6 +25,8 @@ namespace TS_SfM {
 
       std::vector<cv::KeyPoint> m_v_kpts;
       cv::Mat m_m_descriptors;
+
+      bool m_b_activated;
 
       std::vector<std::vector<std::vector<cv::KeyPoint>>> m_vvv_grid_kpts;
       std::vector<std::vector<cv::Mat>> m_vvm_grid_descs;

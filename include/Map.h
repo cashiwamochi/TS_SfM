@@ -15,12 +15,18 @@ namespace TS_SfM {
       Map(){};
       ~Map(){};
 
-      void SetInitialMap();
+      void Initialize(std::vector<KeyFrame> v_keyframes, std::vector<MapPoint> v_mappoints);
 
       std::mutex m_update_mtx;
 
+      KeyFrame& GetKeyFrameObservingMapPoint(const int& map_id);
+
     private:
-      std::list<MapPoint> m_l_map_point;
-      std::list<KeyFrame> m_l_keyframe;
+      std::vector<MapPoint> m_v_mappoints;
+      std::vector<KeyFrame> m_v_keyframes;
+
+
+
+
   };
 } // namespace

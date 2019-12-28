@@ -51,8 +51,16 @@
 
 
 namespace TS_SfM {
-  class Frame;
+  class KeyFrame;
+  class MapPoint;
   class Map;
+  struct Camera;
+
+   struct BAResult {
+    std::vector<KeyFrame> v_keyframes;
+    std::vector<MapPoint> v_mappoints;
+    float repro_error;
+   };
 
   class Optimizer {
       public:
@@ -67,7 +75,7 @@ namespace TS_SfM {
 
   };
 
-
-  void BundleAdjustmentBeta();
+  BAResult BundleAdjustmentBeta(std::vector<KeyFrame> v_keyframes,
+                                std::vector<MapPoint> v_mappoints, const Camera& cam);
 
 };
