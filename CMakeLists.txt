@@ -75,6 +75,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 add_library(
   ${PROJECT_NAME} STATIC
   src/System.cc
+  src/Utils.cc
   src/Reconstructor.cc
   src/Tracker.cc
   src/Mapper.cc
@@ -89,7 +90,6 @@ add_library(
   src/Viewer.cc
   src/LoopClosure.cc
   src/ConfigLoader.cc
-  src/Utils.cc
 )
 
 target_link_libraries(

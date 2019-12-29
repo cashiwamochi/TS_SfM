@@ -352,7 +352,7 @@ namespace TS_SfM {
 
           // Optimization would be processed here.
            {
-             BAResult result = BundleAdjustmentBeta(v_keyframes, v_mappoints, m_camera);
+             // BAResult result = BundleAdjustmentBeta(v_keyframes, v_mappoints, m_camera);
            }
 
 
@@ -360,7 +360,7 @@ namespace TS_SfM {
       }
     }
 
-  m_p_map->Initialize(v_keyframes, v_mappoints);
+  // m_p_map->Initialize(v_keyframes, v_mappoints);
 
 #if 0
     for(int step_from_center = 0; step_from_center < distance_to_edge-1; ++step_from_center) {
@@ -489,7 +489,7 @@ namespace TS_SfM {
 #else
     FlexibleInitializeGlobalMap(v_ini_frames);
 #endif
-
+    std::cout << "=============================" << std::endl;
     std::cout << std::endl;
     return;
   };

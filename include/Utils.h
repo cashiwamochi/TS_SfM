@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <opencv2/opencv.hpp>
+#include <Eigen/Core>
 
 namespace TS_SfM{
   class Frame;
@@ -10,4 +11,12 @@ namespace TS_SfM{
 
   bool CheckIndex(const int& src_frame_idx, const int& dst_frame_idx,
       const std::vector<bool>& vb_initialized, const int length);
+
+  // template<typename _Tp, int _rows, int _cols>
+  // void cv2eigen(const cv::Mat& src,
+  //                Eigen::Matrix<_Tp, _rows, _cols>& dst );
+  //
+  // template<typename _Tp, int _rows, int _cols>
+  // void eigen2cv(const Eigen::Matrix<_Tp, _rows, _cols>& src,
+  //               cv::Mat& dst );
 }

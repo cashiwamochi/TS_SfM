@@ -3,9 +3,11 @@
 #include "KeyFrame.h"
 #include "Map.h"
 #include "MapPoint.h"
+#include "Solver.h"
+#include "Utils.h"
+
 
 using namespace Eigen;
-using namespace std;
 
 namespace TS_SfM {
 
@@ -26,7 +28,9 @@ bool Optimizer::SetData() {
                             std::vector<MapPoint> v_mappoints, const Camera& cam)
 {
   BAResult result;
-#if 1
+  const int center_frame_idx = static_cast<int>(v_keyframes.size() - 1)/2;
+
+  /*Optimizer Setup ==================*/
   g2o::SparseOptimizer optimizer;
   optimizer.setVerbose(true);
   std::unique_ptr<g2o::BlockSolver_6_3::LinearSolverType> linearSolver;
@@ -37,36 +41,114 @@ bool Optimizer::SetData() {
     g2o::make_unique<g2o::BlockSolver_6_3>(std::move(linearSolver))
   );
   optimizer.setAlgorithm(solver);
+  /*================== Optimizer Setup*/
 
-#else
+  /*Problem Setup ======================*/
 
-   // Setup optimizer
-	g2o::SparseOptimizer optimizer;
+  // Set vertex to pose
+  // std::vector<g2o::SE3Quat, aligned_allocator<g2o::SE3Quat> > v_poses;
+  int vertex_id = 0;
+  for(KeyFrame keyframe : v_keyframes) {
+    if(keyframe.IsActivated()) {
+      continue;
+    }
 
-	/*// old approach
-	g2o::BlockSolverX::LinearSolverType * linearSolver;
+    g2o::VertexSE3Expmap* vertex_se3 = new g2o::VertexSE3Expmap();
+    vertex_se3->setId(vertex_id);
+    if(keyframe.m_id == center_frame_idx-1 || keyframe.m_id == center_frame_idx) {
+      vertex_se3->setFixed(true);
+    }
 
-	linearSolver = new g2o::LinearSolverEigen<g2o::BlockSolverX::PoseMatrixType>();
+    Eigen::Matrix3d rot;
+    Eigen::Vector3d t;
+    cv2eigen(keyframe.GetPoseTrans(), t);
+    cv2eigen(keyframe.GetPoseRot(), rot);
+    Eigen::Quaterniond q(rot);
 
-	g2o::BlockSolverX * solver_ptr = new g2o::BlockSolverX(linearSolver);
+    g2o::SE3Quat pose(q,t);
+    // v_poses.push_back(pose);
 
-	//g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(solver_ptr);
-	*/
+    vertex_se3->setEstimate(pose);
+    optimizer.addVertex(vertex_se3);
+    ++vertex_id;
+  }
 
-	// fix with std::unique_ptr, linear solver:
-	std::unique_ptr<g2o::BlockSolverX::LinearSolverType> linearSolver 
-				(new g2o::LinearSolverEigen<g2o::BlockSolverX::PoseMatrixType>());
+  int point_id = vertex_id;
+  int point_num = 0;
+  double sum_diff2 = 0;
 
-	// fix with std::unique_ptr, solver_ptr:
-	std::unique_ptr<g2o::BlockSolverX> solver_ptr (new g2o::BlockSolverX(std::move(linearSolver)));
+#if 0
+  unordered_map<int,int> pointid_2_trueid;
+  unordered_set<int> inliers;
 
-//	g2o::OptimizationAlgorithmLevenberg * solver = new g2o::OptimizationAlgorithmLevenberg(std::move(solver_ptr));
+  for (MapPoint mappoint : v_mappoints){
+    g2o::VertexSBAPointXYZ* v_p = new g2o::VertexSBAPointXYZ();
+    v_p->setId(point_id);
+    v_p->setMarginalized(true);
+    v_p->setEstimate(Eigen::Vector3d(mappoint.GetPosition()));
 
+
+    // Projection check
+    int num_obs = 0;
+    for (size_t j=0; j<true_poses.size(); ++j){
+      Vector2d z = cam_params->cam_map(true_poses.at(j).map(true_points.at(i)));
+      if (z[0]>=0 && z[1]>=0 && z[0]<640 && z[1]<480){
+        ++num_obs;
+      }
+    }
+
+    if (num_obs>=2){
+      optimizer.addVertex(v_p);
+      bool inlier = true;
+      for (size_t j=0; j<true_poses.size(); ++j){
+        Vector2d z
+            = cam_params->cam_map(true_poses.at(j).map(true_points.at(i)));
+  
+        if (z[0]>=0 && z[1]>=0 && z[0]<640 && z[1]<480){
+          double sam = Sample::uniform();
+          if (sam<OUTLIER_RATIO){
+            z = Vector2d(Sample::uniform(0,640),
+                         Sample::uniform(0,480));
+            inlier= false;
+          }
+          z += Vector2d(Sample::gaussian(PIXEL_NOISE),
+                        Sample::gaussian(PIXEL_NOISE));
+          g2o::EdgeProjectXYZ2UV * e
+              = new g2o::EdgeProjectXYZ2UV();
+          e->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(v_p));
+          e->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>
+                       (optimizer.vertices().find(j)->second));
+          e->setMeasurement(z);
+          e->information() = Matrix2d::Identity();
+          if (ROBUST_KERNEL) {
+            g2o::RobustKernelHuber* rk = new g2o::RobustKernelHuber;
+            e->setRobustKernel(rk);
+          }
+          e->setParameterId(0, 0);
+          optimizer.addEdge(e);
+        }
+      }
+  
+      if (inlier){
+        inliers.insert(point_id);
+        Vector3d diff = v_p->estimate() - true_points[i];
+  
+        sum_diff2 += diff.dot(diff);
+      }
+      pointid_2_trueid.insert(make_pair(point_id,i));
+      ++point_id;
+      ++point_num;
+    }
+  }
 #endif
 
+  /*====================== Problem Setup*/
 
 
-
+  /* Optimization ========================*/
+  // optimizer.initializeOptimization();
+  // optimizer.optimize(50);
+  /* ======================== Optimization*/
   return result;
 }
 

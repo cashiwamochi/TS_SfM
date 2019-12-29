@@ -18,6 +18,11 @@ namespace TS_SfM {
       cv::Mat GetDescriptors() const; 
       std::vector<cv::KeyPoint> GetKeyPoints() const;
       cv::Mat GetImage() const;
+      cv::Mat GetPose() {return m_m_cTw;};
+      cv::Mat GetPoseTrans() {return m_m_cTw.rowRange(0,3).col(3);};
+      cv::Mat GetPoseRot() {return m_m_cTw.rowRange(0,3).colRange(0,3);};
+
+      bool IsActivated() {return m_b_activated;};
 
     private:
       cv::Mat m_m_image;

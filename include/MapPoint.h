@@ -35,6 +35,14 @@ namespace TS_SfM {
         m_m_descriptor = _desc.clone();
       }
 
+      void SetPosition(const float x, const float y, const float z) {
+        m_pos = cv::Point3f(x,y,z);
+      }
+
+      cv::Point3f GetPosition() const {
+        return m_pos;
+      }
+
       bool Activate() {
         if(m_m_descriptor.empty() || m_v_match_info.size() == 0)
         {
