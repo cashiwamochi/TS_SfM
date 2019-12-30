@@ -335,5 +335,17 @@ namespace Solver {
     return score;
   }
 
+  cv::Mat SolvePnP(const std::vector<cv::KeyPoint>& v_pts0,
+                   const std::vector<cv::KeyPoint>& v_pts1,
+                   const std::vector<cv::DMatch>& v_matches_01,
+                   const cv::Mat& K) {
+    cv::Mat cTw;
+
+
+
+
+    return cTw;
+  }
+
 }; // Solver
 }; // TS_SfM
