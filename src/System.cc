@@ -43,7 +43,7 @@ namespace TS_SfM {
     m_p_extractor.reset(new KPExtractor(m_image_width, m_image_height,
                         ConfigLoader::LoadExtractorConfig(str_config_file)));
 
-    // m_p_map = std::make_shared<Map>();
+    m_p_map = std::make_shared<Map>();
     m_p_reconstructor.reset(new Reconstructor(str_config_file));
   }
 
@@ -360,7 +360,8 @@ namespace TS_SfM {
       }
     }
 
-  // m_p_map->Initialize(v_keyframes, v_mappoints);
+  // Map is initialized here.
+  m_p_map->Initialize(v_keyframes, v_mappoints);
 
 #if 0
     for(int step_from_center = 0; step_from_center < distance_to_edge-1; ++step_from_center) {

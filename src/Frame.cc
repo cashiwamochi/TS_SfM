@@ -26,7 +26,8 @@ namespace TS_SfM {
 #endif
 
     m_vv_num_grid_kpts = p_extractor->DistributeToGrids(m_v_kpts, m_m_descriptors,
-                                                        m_vvv_grid_kpts, m_vvm_grid_descs);
+                                                        m_vvv_grid_kpts, m_vvm_grid_descs,
+                                                        m_vvv_grid_kp_idx);
 
     m_num_assigned_kps = 0;
     for(auto v : m_vv_num_grid_kpts) 
@@ -43,9 +44,9 @@ namespace TS_SfM {
     m_m_descriptors = cv::Mat::zeros(m_num_assigned_kps, _length, _type); 
 
     int copy_idx = 0;
-    for(int row = 0; row < p_extractor->GetGridSize().first; row++) {
-      for(int col = 0; col < p_extractor->GetGridSize().second; col++) {
-        for(int idx = 0; idx < m_vv_num_grid_kpts[row][col]; idx++) {
+    for(int row = 0; row < (int)p_extractor->GetGridSize().first; row++) {
+      for(int col = 0; col < (int)p_extractor->GetGridSize().second; col++) {
+        for(int idx = 0; idx < (int)m_vv_num_grid_kpts[row][col]; idx++) {
           m_v_kpts.push_back(m_vvv_grid_kpts[row][col][idx]); 
           m_vvm_grid_descs[row][col].row(idx).copyTo(m_m_descriptors.row(copy_idx)); 
           copy_idx++;
@@ -119,6 +120,12 @@ namespace TS_SfM {
   unsigned int Frame::GetAssignedKeyPointsNum() const
   {
     return m_num_assigned_kps; 
+  }
+
+  std::vector<std::vector<std::vector<int>>> 
+    Frame::GetGridKpIdx() const
+  {
+    return m_vvv_grid_kp_idx;
   }
 
   void Frame::ShowFeaturePoints() {

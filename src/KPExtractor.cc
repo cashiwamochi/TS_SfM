@@ -48,13 +48,14 @@ namespace TS_SfM {
   KPExtractor::DistributeToGrids(const std::vector<cv::KeyPoint>& v_keypoints,
                                  const cv::Mat& m_descriptors,
                                  std::vector<std::vector<std::vector<cv::KeyPoint>>>& vvv_grid_kpts,
-                                 std::vector<std::vector<cv::Mat>>& vvm_grid_descs) 
+                                 std::vector<std::vector<cv::Mat>>& vvm_grid_descs,
+                                 std::vector<std::vector<std::vector<int>>>& vv_grid_kp_idx) 
   {
     std::vector<KPData> v_kpdata;
     v_kpdata.reserve(m_descriptors.rows);
 
-    for(int row = 0; row < m_descriptors.rows; row++) {
-      v_kpdata.push_back(KPData(v_keypoints[row], m_descriptors.row(row))); 
+    for(int r = 0; r < m_descriptors.rows; r++) {
+      v_kpdata.push_back(KPData(r, v_keypoints[r], m_descriptors.row(r))); 
      }
 
     // sort KeyPoint and Descriptors 
@@ -62,18 +63,22 @@ namespace TS_SfM {
 
     vvv_grid_kpts.clear();
     vvm_grid_descs.clear();
+    vv_grid_kp_idx.clear();
 
     // initialize vectors for grids
     std::vector<std::vector<unsigned int>> 
       vv_num_grid_kpts(m_num_vertical_grid, std::vector<unsigned int>(m_num_horizontal_grid,0));
     vvv_grid_kpts.resize(m_num_vertical_grid);
     vvm_grid_descs.resize(m_num_vertical_grid);
+    vv_grid_kp_idx.resize(m_num_vertical_grid);
     for(unsigned int i = 0; i < m_num_vertical_grid; i++) {
       vvv_grid_kpts[i].resize(m_num_horizontal_grid);
       vvm_grid_descs[i].resize(m_num_horizontal_grid);
+      vv_grid_kp_idx[i].resize(m_num_horizontal_grid); 
       for(unsigned int j = 0; j < m_num_horizontal_grid; j++) {
         vvv_grid_kpts[i][j].clear(); 
         vvm_grid_descs[i][j].release();
+        vv_grid_kp_idx[i][j].clear(); 
       }
     }
 
@@ -85,6 +90,7 @@ namespace TS_SfM {
       }
       vvv_grid_kpts[grid_idx.first][grid_idx.second].push_back(data.kp);
       vvm_grid_descs[grid_idx.first][grid_idx.second].push_back(data.descriptor);
+      vv_grid_kp_idx[grid_idx.first][grid_idx.second].push_back(data.id);
       vv_num_grid_kpts[grid_idx.first][grid_idx.second]++;
     }
 

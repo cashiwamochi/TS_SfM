@@ -49,4 +49,17 @@ namespace TS_SfM {
 
     return false;
   }
+
+  Eigen::Vector2d ProjectToImage(const cv::Mat& K, const cv::Mat& cTw, const cv::Point3f& pt) {
+    Eigen::Vector2d projected_point;
+    
+    cv::Mat _pt_on_map = (cv::Mat_<double>(4,1) << pt.x, pt.y, pt.z, 1.0);
+    cv::Mat _pt = K * cTw.rowRange(0,3) * _pt_on_map;
+
+    projected_point(0) = _pt_on_map.at<double>(0)/_pt_on_map.at<double>(3);
+    projected_point(1) = _pt_on_map.at<double>(1)/_pt_on_map.at<double>(3);
+    projected_point(2) = _pt_on_map.at<double>(2)/_pt_on_map.at<double>(3);
+
+    return projected_point;
+  }
 }

@@ -29,6 +29,9 @@ bool Optimizer::SetData() {
 {
   BAResult result;
   const int center_frame_idx = static_cast<int>(v_keyframes.size() - 1)/2;
+  cv::Mat K = (cv::Mat_<double>(3,3) << (double)cam.f_fx, 0.0, (double)cam.f_cx,
+                                        0.0, (double)cam.f_fy, (double)cam.f_cy,
+                                        0.0, 0.0, 1.0);
 
   /*Optimizer Setup ==================*/
   g2o::SparseOptimizer optimizer;
@@ -78,10 +81,12 @@ bool Optimizer::SetData() {
   double sum_diff2 = 0;
 
 #if 0
-  unordered_map<int,int> pointid_2_trueid;
-  unordered_set<int> inliers;
 
   for (MapPoint mappoint : v_mappoints){
+    if(mappoint.IsActivated()) {
+      continue;
+    }
+
     g2o::VertexSBAPointXYZ* v_p = new g2o::VertexSBAPointXYZ();
     v_p->setId(point_id);
     v_p->setMarginalized(true);
@@ -89,17 +94,21 @@ bool Optimizer::SetData() {
 
 
     // Projection check
-    int num_obs = 0;
-    for (size_t j=0; j<true_poses.size(); ++j){
-      Vector2d z = cam_params->cam_map(true_poses.at(j).map(true_points.at(i)));
-      if (z[0]>=0 && z[1]>=0 && z[0]<640 && z[1]<480){
-        ++num_obs;
-      }
-    }
+    // for (auto keyframe : v_keyframes){
+    //   ++num_obs;
+    // }
 
-    if (num_obs>=2){
+    int num_obs = mappoint.GetObsNum();
+    
+    if (num_obs >= 2){
       optimizer.addVertex(v_p);
-      bool inlier = true;
+#if 1
+      for(int obs_idx = 0; obs_idx < num_obs; ++obs_idx) {
+        MatchInfo match_info = mappoint.GetMatchInfo(obs_idx);
+        g2o::EdgeSE3ProjectXYZ* e = new g2o::EdgeSE3ProjectXYZ();
+      }
+
+#else
       for (size_t j=0; j<true_poses.size(); ++j){
         Vector2d z
             = cam_params->cam_map(true_poses.at(j).map(true_points.at(i)));
@@ -128,6 +137,10 @@ bool Optimizer::SetData() {
           optimizer.addEdge(e);
         }
       }
+#endif
+      else {
+        std::cout << " ==================>>> something wrong in mapoint match_info" << std::endl;
+       }
   
       if (inlier){
         inliers.insert(point_id);

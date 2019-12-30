@@ -43,6 +43,10 @@ namespace TS_SfM {
         return m_pos;
       }
 
+      bool IsActivated() {
+        return m_is_activated;
+      }
+
       bool Activate() {
         if(m_m_descriptor.empty() || m_v_match_info.size() == 0)
         {
@@ -53,6 +57,14 @@ namespace TS_SfM {
           m_is_activated = true;
         }
         return m_is_activated;
+      }
+
+      int GetObsNum() const {
+        return (int)m_v_match_info.size();
+      }
+
+      MatchInfo GetMatchInfo(const int& idx) const {
+        return m_v_match_info[idx];
       }
 
 

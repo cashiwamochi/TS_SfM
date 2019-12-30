@@ -6,7 +6,25 @@
 namespace TS_SfM {
   class KPExtractor {
     public:
+      struct KPData {
+        int id;
+        cv::KeyPoint kp;
+        cv::Mat descriptor;
 
+        KPData(int _id, cv::KeyPoint _kp, cv::Mat _desc) {
+          id = _id;
+          kp = _kp;
+          descriptor = _desc;
+        }
+
+        static bool cmp(const KPData &a, const KPData &b)
+        {
+          return a.kp.response > b.kp.response;
+        }
+
+      };
+
+    public:
       struct ExtractorConfig {
         std::string str_descriptor;
         float threshold;
@@ -29,7 +47,8 @@ namespace TS_SfM {
           const std::vector<cv::KeyPoint>& v_keypoints,
           const cv::Mat& m_descriptors,
           std::vector<std::vector<std::vector<cv::KeyPoint>>>& vvv_grid_kpts,
-          std::vector<std::vector<cv::Mat>>& vvm_grid_descs);
+          std::vector<std::vector<cv::Mat>>& vvm_grid_descs,
+          std::vector<std::vector<std::vector<int>>>& vv_grid_kp_idx);
 
       void ExtractFeaturePoints(cv::Mat m_input,
                                 std::vector<cv::KeyPoint>& v_kpts,
@@ -41,24 +60,6 @@ namespace TS_SfM {
       std::vector< std::vector<std::pair<cv::Point2f, cv::Point2f>>> GetGrids();
 
     private:
-
-      struct KPData {
-        cv::KeyPoint kp;
-        cv::Mat descriptor;
-
-        KPData(cv::KeyPoint _kp, cv::Mat _desc) {
-          kp = _kp;
-          descriptor = _desc;
-        }
-
-        static bool cmp(const KPData &a, const KPData &b)
-        {
-          return a.kp.response > b.kp.response;
-        }
-
-      };
-
-
       std::pair<int, int> GetWhichGrid(const cv::Point2f& pt);
       void SetGrids();
 
@@ -67,7 +68,6 @@ namespace TS_SfM {
       const ExtractorConfig m_config;
 
       cv::Ptr<cv::Feature2D> m_p_extractor;
-
 
       std::vector<std::vector<std::pair<cv::Point2f,cv::Point2f>>> m_vvpair_grid_corners;
   

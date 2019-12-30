@@ -29,6 +29,7 @@ namespace TS_SfM {
       std::vector<std::vector<std::vector<cv::KeyPoint>>> GetGridKeyPoints() const;
       std::vector<std::vector<cv::Mat>> GetGridDescs() const;
       std::vector<std::vector<unsigned int>> GetGridKeyPointsNum() const;
+      std::vector<std::vector<std::vector<int>>> GetGridKpIdx() const;
       unsigned int GetAssignedKeyPointsNum() const;
 
       void SetPose (const cv::Mat& _cTw) {
@@ -66,6 +67,7 @@ namespace TS_SfM {
       // data assigned to grids
       std::vector<std::vector<std::vector<cv::KeyPoint>>> m_vvv_grid_kpts;
       std::vector<std::vector<cv::Mat>> m_vvm_grid_descs;
+      std::vector<std::vector<std::vector<int>>> m_vvv_grid_kp_idx;
       std::vector<std::vector<unsigned int>> m_vv_num_grid_kpts;
       unsigned int m_num_assigned_kps;
 
