@@ -6,6 +6,7 @@
 #include "Solver.h"
 #include "Utils.h"
 
+#include <unordered_map>
 
 using namespace Eigen;
 
@@ -25,7 +26,7 @@ bool Optimizer::SetData() {
 
 // Firstly i will implement a simple optimizer for verification.
   BAResult BundleAdjustmentBeta(std::vector<KeyFrame> v_keyframes,
-                            std::vector<MapPoint> v_mappoints, const Camera& cam)
+                                std::vector<MapPoint> v_mappoints, const Camera& cam)
 {
   BAResult result;
   const int center_frame_idx = static_cast<int>(v_keyframes.size() - 1)/2;
@@ -49,10 +50,10 @@ bool Optimizer::SetData() {
   /*Problem Setup ======================*/
 
   // Set vertex to pose
-  // std::vector<g2o::SE3Quat, aligned_allocator<g2o::SE3Quat> > v_poses;
+  std::unordered_map<int, int> keyframeIdToVertexId;
   int vertex_id = 0;
   for(KeyFrame keyframe : v_keyframes) {
-    if(keyframe.IsActivated()) {
+    if(!keyframe.IsActivated()) {
       continue;
     }
 
@@ -64,15 +65,16 @@ bool Optimizer::SetData() {
 
     Eigen::Matrix3d rot;
     Eigen::Vector3d t;
+    cv::Mat _t = keyframe.GetPose();
     cv2eigen(keyframe.GetPoseTrans(), t);
     cv2eigen(keyframe.GetPoseRot(), rot);
     Eigen::Quaterniond q(rot);
 
     g2o::SE3Quat pose(q,t);
-    // v_poses.push_back(pose);
 
     vertex_se3->setEstimate(pose);
     optimizer.addVertex(vertex_se3);
+    keyframeIdToVertexId[keyframe.m_id] = vertex_id;
     ++vertex_id;
   }
 
@@ -80,87 +82,62 @@ bool Optimizer::SetData() {
   int point_num = 0;
   double sum_diff2 = 0;
 
-#if 0
+#if 1
 
   for (MapPoint mappoint : v_mappoints){
-    if(mappoint.IsActivated()) {
+    if(!mappoint.IsActivated()) {
       continue;
     }
 
     g2o::VertexSBAPointXYZ* v_p = new g2o::VertexSBAPointXYZ();
     v_p->setId(point_id);
     v_p->setMarginalized(true);
-    v_p->setEstimate(Eigen::Vector3d(mappoint.GetPosition()));
+    v_p->setEstimate(Eigen::Vector3d(mappoint.GetPosition().x,
+                                     mappoint.GetPosition().y,
+                                     mappoint.GetPosition().z));
 
-
-    // Projection check
-    // for (auto keyframe : v_keyframes){
-    //   ++num_obs;
-    // }
-
-    int num_obs = mappoint.GetObsNum();
-    
-    if (num_obs >= 2){
+    if (mappoint.GetObsNum() >= 2){
       optimizer.addVertex(v_p);
-#if 1
-      for(int obs_idx = 0; obs_idx < num_obs; ++obs_idx) {
-        MatchInfo match_info = mappoint.GetMatchInfo(obs_idx);
-        g2o::EdgeSE3ProjectXYZ* e = new g2o::EdgeSE3ProjectXYZ();
-      }
+      for(int obs_idx = 0; obs_idx < (int)mappoint.GetObsNum(); ++obs_idx) {
+        MatchInfo m = mappoint.GetMatchInfo(obs_idx);
+        auto pt = v_keyframes[m.frame_id].GetObs(m.kpt_id);
+        Eigen::Vector2d obs(pt.x, pt.y);
 
-#else
-      for (size_t j=0; j<true_poses.size(); ++j){
-        Vector2d z
-            = cam_params->cam_map(true_poses.at(j).map(true_points.at(i)));
-  
-        if (z[0]>=0 && z[1]>=0 && z[0]<640 && z[1]<480){
-          double sam = Sample::uniform();
-          if (sam<OUTLIER_RATIO){
-            z = Vector2d(Sample::uniform(0,640),
-                         Sample::uniform(0,480));
-            inlier= false;
-          }
-          z += Vector2d(Sample::gaussian(PIXEL_NOISE),
-                        Sample::gaussian(PIXEL_NOISE));
-          g2o::EdgeProjectXYZ2UV * e
-              = new g2o::EdgeProjectXYZ2UV();
-          e->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(v_p));
-          e->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>
-                       (optimizer.vertices().find(j)->second));
-          e->setMeasurement(z);
-          e->information() = Matrix2d::Identity();
-          if (ROBUST_KERNEL) {
-            g2o::RobustKernelHuber* rk = new g2o::RobustKernelHuber;
-            e->setRobustKernel(rk);
-          }
-          e->setParameterId(0, 0);
-          optimizer.addEdge(e);
-        }
+        g2o::EdgeSE3ProjectXYZ* edge = new g2o::EdgeSE3ProjectXYZ();
+
+        edge->setVertex(0,
+           dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(point_id)));
+        edge->setVertex(1,
+           dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer.vertex(keyframeIdToVertexId[m.kpt_id])));
+
+        edge->setMeasurement(obs);
+        edge->setInformation(Eigen::Matrix2d::Identity());
+
+        g2o::RobustKernelHuber* r_k = new g2o::RobustKernelHuber;
+        edge->setRobustKernel(r_k);
+        r_k->setDelta(4.0);
+
+        edge->fx = (double)cam.f_fx;
+        edge->fy = (double)cam.f_fy;
+        edge->cx = (double)cam.f_cx;
+        edge->cy = (double)cam.f_cy;
+
+        optimizer.addEdge(edge);
+        ++point_id;
       }
-#endif
-      else {
-        std::cout << " ==================>>> something wrong in mapoint match_info" << std::endl;
-       }
-  
-      if (inlier){
-        inliers.insert(point_id);
-        Vector3d diff = v_p->estimate() - true_points[i];
-  
-        sum_diff2 += diff.dot(diff);
-      }
-      pointid_2_trueid.insert(make_pair(point_id,i));
-      ++point_id;
-      ++point_num;
     }
+    else {
+      std::cout << "[WARNING::Optimizer] something wrong in mapoint match_info" << std::endl;
+     }
+  
   }
 #endif
-
   /*====================== Problem Setup*/
 
 
   /* Optimization ========================*/
-  // optimizer.initializeOptimization();
-  // optimizer.optimize(50);
+  optimizer.initializeOptimization();
+  optimizer.optimize(50);
   /* ======================== Optimization*/
   return result;
 }

@@ -57,8 +57,8 @@ namespace TS_SfM {
     private:
       const cv::Mat m_m_image;
       bool m_is_key;
-      cv::Mat m_m_cTw; // (4 x 4, CV_F32C1)
-      cv::Mat m_m_wTc; // (4 x 4, CV_F32C1)
+      cv::Mat m_m_cTw; // (3 x 4, CV_F32C1)
+      cv::Mat m_m_wTc; // (3 x 4, CV_F32C1)
 
       // original data
       std::vector<cv::KeyPoint> m_v_kpts;

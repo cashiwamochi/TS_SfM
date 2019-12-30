@@ -13,4 +13,7 @@ namespace TS_SfM{
       const std::vector<bool>& vb_initialized, const int length);
 
   Eigen::Vector2d ProjectToImage(const cv::Mat& K, const cv::Mat& cTw, const cv::Point3f& pt);
+
+  cv::Mat Inverse3x4(const cv::Mat& _pose);
+  cv::Mat AppendRow(const cv::Mat& _pose);
 }

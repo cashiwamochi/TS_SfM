@@ -193,7 +193,7 @@ namespace TS_SfM {
 
     std::vector<KeyFrame> v_keyframes(v_frames.size());
     std::vector<MapPoint> v_mappoints;
-    std::vector<bool> vb_initialized(v_frames.size());
+    std::vector<bool> vb_initialized(v_frames.size(),false);
 
     // Initialization using 2 views geometry
     // This is initializatio in initialization.
@@ -321,8 +321,26 @@ namespace TS_SfM {
                                                                   dst_frame.GetKeyPoints(),
                                                                   v_matches, mK, T_01); 
 
-          src_frame.SetPose(cv::Mat::eye(3,4,CV_32FC1));
-          dst_frame.SetPose(T_01);
+          if(direction == 1) {
+            // src->dst(uninitialized)
+            if(vb_initialized[src_frame_idx]) {
+              // src_frame.SetPose(cv::Mat::eye(3,4,CV_32FC1));
+              dst_frame.SetPose(T_01);
+            }
+            else {
+              std::cout << "[WARNING::System] Initialization index has a bug" << std::endl;
+            }
+          }
+          else {
+            // src(uninitialized)->dst->base
+            if(vb_initialized[dst_frame_idx]) {
+              // dst_frame.SetPose(cv::Mat::eye(3,4,CV_32FC1));
+              src_frame.SetPose(Inverse3x4(T_01));
+            }
+            else {
+              std::cout << "[WARNING::System] Initialization index has a bug" << std::endl;
+            }
+          }
 
           int _i = 0;
           for(auto pt_3d : v_pts_3d) {
@@ -337,7 +355,7 @@ namespace TS_SfM {
             if(mappoint.Activate()) {
               v_mappoints.push_back(mappoint);
             }
-            _i++;
+            ++_i;
           }
 
           if(!vb_initialized[src_frame_idx])
@@ -351,11 +369,9 @@ namespace TS_SfM {
             vb_initialized[src_frame_idx] = true;
 
           // Optimization would be processed here.
-           {
-             // BAResult result = BundleAdjustmentBeta(v_keyframes, v_mappoints, m_camera);
-           }
-
-
+          {
+             BAResult result = BundleAdjustmentBeta(v_keyframes, v_mappoints, m_camera);
+          }
         }
       }
     }
@@ -363,98 +379,13 @@ namespace TS_SfM {
   // Map is initialized here.
   m_p_map->Initialize(v_keyframes, v_mappoints);
 
-#if 0
-    for(int step_from_center = 0; step_from_center < distance_to_edge-1; ++step_from_center) {
-      if(center_frame_idx+step_from_center < (int)v_frames.size()) {
-        // We compute matches from old to new always
-        int src_frame_idx = center_frame_idx + step_from_center;
-        int dst_frame_idx = center_frame_idx + step_from_center + 1;
-        Frame& src_frame = v_frames[src_frame_idx].get();
-        Frame& dst_frame = v_frames[dst_frame_idx].get();
-        std::vector<cv::DMatch> v_matches = vv_matches[src_frame_idx];
-        cv::Mat mF;
-        std::vector<bool> vb_mask;
-        int score;
-        Solver::SolveEpipolarConstraintRANSAC(src_frame.GetImage(), dst_frame.GetImage(),  
-                                              std::make_pair(src_frame.GetKeyPoints(),dst_frame.GetKeyPoints()),
-                                              v_matches, mF, vb_mask, score);
-
-        std::vector<cv::DMatch> _v_matches = v_matches;
-        v_matches.clear();
-        for(size_t i = 0; i < _v_matches.size(); i++) {
-          if(vb_mask[i])  {
-            v_matches.push_back(_v_matches[i]); 
-          }
-        }
-
-        std::cout << "Score = " << score
-                  << " / " << _v_matches.size() <<  std::endl;
-
-        if(true) DrawEpiLines(src_frame, dst_frame, v_matches, vb_mask, mF);
-
-        // decompose E
-        cv::Mat mE = mK.t() * mF * mK;
-        cv::Mat T_01 = Solver::DecomposeE(src_frame.GetKeyPoints(), dst_frame.GetKeyPoints(), v_matches, mK, mE);
-        src_frame.SetMatchesToNew(v_matches);
-        dst_frame.SetMatchesToOld(v_matches);
-
-        // Triangulation
-        std::vector<cv::Point3f> v_pts_3d = Solver::Triangulate(src_frame.GetKeyPoints(),
-                                                                dst_frame.GetKeyPoints(),
-                                                                v_matches, mK, T_01); 
-      }
-
-      if(center_frame_idx-step_from_center >= 0) {
-        // We compute matches from old to new always
-        int src_frame_idx = center_frame_idx + step_from_center - 1;
-        int dst_frame_idx = center_frame_idx + step_from_center;
-        Frame& src_frame = v_frames[src_frame_idx].get();
-        Frame& dst_frame = v_frames[dst_frame_idx].get();
-        std::vector<cv::DMatch> v_matches = vv_matches[src_frame_idx];
-        cv::Mat mF;
-        std::vector<bool> vb_mask;
-        int score;
-        Solver::SolveEpipolarConstraintRANSAC(src_frame.GetImage(), dst_frame.GetImage(),  
-                                              std::make_pair(src_frame.GetKeyPoints(),dst_frame.GetKeyPoints()),
-                                              v_matches, mF, vb_mask, score);
-
-        std::vector<cv::DMatch> _v_matches = v_matches;
-        v_matches.clear();
-        for(size_t i = 0; i < _v_matches.size(); i++) {
-          if(vb_mask[i])  {
-            v_matches.push_back(_v_matches[i]); 
-          }
-        }
-
-        std::cout << "Score = " << score
-                  << " / " << _v_matches.size() <<  std::endl;
-
-        if(true) DrawEpiLines(src_frame, dst_frame, v_matches, vb_mask, mF);
-
-        // decompose E
-        cv::Mat mE = mK.t() * mF * mK;
-        cv::Mat T_01 = Solver::DecomposeE(src_frame.GetKeyPoints(), dst_frame.GetKeyPoints(), v_matches, mK, mE);
-
-        src_frame.SetMatchesToNew(v_matches);
-        dst_frame.SetMatchesToOld(v_matches);
-        // Triangulation
-        std::vector<cv::Point3f> v_pts_3d = Solver::Triangulate(src_frame.GetKeyPoints(), 
-                                                                dst_frame.GetKeyPoints(),
-                                                                v_matches, mK, T_01); 
-
-      }
-    }
-#endif
-
     // Convert frames to keyframes
     // All data should be inserted to Map
 
 #if 0
     {
       using namespace open3d;
-
       utility::SetVerbosityLevel(utility::VerbosityLevel::Debug);
-
       auto cloud_ptr = std::make_shared<geometry::PointCloud>();
       std::vector<Eigen::Vector3d> vd_points;
       for(int i = 0; i < 30; ++i) {
@@ -467,7 +398,6 @@ namespace TS_SfM {
       cloud_ptr->NormalizeNormals();
       visualization::DrawGeometries({cloud_ptr}, "PointCloud", 1600, 900);
       utility::LogInfo("End of the test.\n");
-
     }
 #endif
 

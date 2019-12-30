@@ -23,11 +23,12 @@ namespace TS_SfM {
       cv::Mat GetPoseRot() {return m_m_cTw.rowRange(0,3).colRange(0,3);};
       cv::Point2f GetObs(const int& kp_id) { return m_v_kpts[kp_id].pt; }
 
+      // KeyFrame is activated if only it has pose
       bool IsActivated() {return m_b_activated;};
 
     private:
       cv::Mat m_m_image;
-      cv::Mat m_m_cTw; // (4 x 4, CV_F32C1)
+      cv::Mat m_m_cTw; // (3 x 4, CV_F32C1)
 
       std::vector<cv::KeyPoint> m_v_kpts;
       cv::Mat m_m_descriptors;
