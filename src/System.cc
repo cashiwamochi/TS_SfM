@@ -410,7 +410,7 @@ namespace TS_SfM {
 
           // Optimization would be processed here.
           {
-             // BAResult result = BundleAdjustmentBeta(v_keyframes, v_mappoints, m_camera);
+             BAResult result = BundleAdjustmentBeta(v_keyframes, v_mappoints, m_camera);
           }
         }
       }
