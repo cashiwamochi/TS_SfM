@@ -67,14 +67,14 @@ namespace TS_SfM {
     cv::Mat result = cv::Mat::zeros(3,4,_pose.type());
     
     result.rowRange(0,3).colRange(0,3) = _pose.rowRange(0,3).colRange(0,3).t();
-    result.rowRange(0,3).col(3) = -1.0 * _pose.rowRange(0,3).colRange(0,3).t() * _pose.t();
+    result.rowRange(0,3).col(3) = -1.0 * _pose.rowRange(0,3).colRange(0,3).t() * _pose.rowRange(0,3).col(3);
 
     return result;
   }
 
   cv::Mat AppendRow(const cv::Mat& _pose) {
     cv::Mat pose = cv::Mat::eye(4,4,_pose.type());
-    pose.rowRange(0,3).colRange(0,4) = _pose.clone();
+    _pose.copyTo(pose.rowRange(0,3).colRange(0,4));
     return pose;
   }
 

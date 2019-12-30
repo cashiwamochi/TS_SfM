@@ -20,6 +20,12 @@ namespace TS_SfM {
         m_pos.z = pt.z;
         m_is_activated = false;
       };
+      MapPoint(const float& x, const float& y, const float& z) {
+        m_pos.x = x;
+        m_pos.y = y;
+        m_pos.z = z;
+        m_is_activated = false;
+      };
       ~MapPoint(){};
 
       void SetMatchInfo(std::vector<MatchInfo> _v_match_info) {

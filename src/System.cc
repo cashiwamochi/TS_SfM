@@ -257,18 +257,21 @@ namespace TS_SfM {
       v_keyframes[src_frame_idx] = KeyFrame(src_frame);
       v_keyframes[dst_frame_idx] = KeyFrame(dst_frame);
       vb_initialized[src_frame_idx] = vb_initialized[dst_frame_idx] = true;
+
+      {
+         BAResult result = BundleAdjustmentBeta(v_keyframes, v_mappoints, m_camera);
+      }
     }
 
     // Do initialization using Map build in 2-view reconstruction.
     {
       bool is_done = false;
       for(int dist_from_center_to_src = 0; !is_done ;dist_from_center_to_src++) {
-        std::vector<int> v_direction = {1,-1}; // forward and backward
+        const std::vector<int> v_direction = {1,-1}; // forward and backward
         for(int direction : v_direction) {
           int src_frame_idx = direction*dist_from_center_to_src + center_frame_idx;
           int dst_frame_idx = src_frame_idx + direction;
           std::cout << src_frame_idx << ":" << dst_frame_idx << std::endl;
-
           ///////////////////////////////////////////////////////////////////
           if(dst_frame_idx < src_frame_idx) {
             std::swap(dst_frame_idx, src_frame_idx);
@@ -283,8 +286,20 @@ namespace TS_SfM {
             // This case was used already.
             continue;
           }
-
           ///////////////////////////////////////////////////////////////////
+
+          cv::Mat base_pose;
+          if(direction == 1) {
+            base_pose = AppendRow(v_keyframes[src_frame_idx].GetPose());
+            // std::cout << v_keyframes[src_frame_idx].GetPose() << std::endl;
+          }
+          else {
+            base_pose = AppendRow(Inverse3x4(v_keyframes[dst_frame_idx].GetPose()));
+            // std::cout << v_keyframes[dst_frame_idx].GetPose() << std::endl;
+          }
+
+          // std::cout << base_pose << std::endl;
+          // std::cout << "==================" << std::endl;
 
           Frame& src_frame = v_frames[src_frame_idx].get();
           Frame& dst_frame = v_frames[dst_frame_idx].get();
@@ -325,7 +340,7 @@ namespace TS_SfM {
             // src->dst(uninitialized)
             if(vb_initialized[src_frame_idx]) {
               // src_frame.SetPose(cv::Mat::eye(3,4,CV_32FC1));
-              dst_frame.SetPose(T_01);
+              dst_frame.SetPose(T_01 * base_pose);
             }
             else {
               std::cout << "[WARNING::System] Initialization index has a bug" << std::endl;
@@ -335,18 +350,43 @@ namespace TS_SfM {
             // src(uninitialized)->dst->base
             if(vb_initialized[dst_frame_idx]) {
               // dst_frame.SetPose(cv::Mat::eye(3,4,CV_32FC1));
-              src_frame.SetPose(Inverse3x4(T_01));
+              src_frame.SetPose(Inverse3x4(T_01) * base_pose);
             }
             else {
               std::cout << "[WARNING::System] Initialization index has a bug" << std::endl;
             }
           }
 
+
           int _i = 0;
-          for(auto pt_3d : v_pts_3d) {
-            // std::cout << _i << "L"<< v_pts_3d.size() <<std::endl;
-            MapPoint mappoint(pt_3d); 
-            cv::Mat desc = ChooseDescriptor(src_frame, dst_frame, pt_3d, v_matches[_i]);
+          for(cv::Point3f _pt_3d : v_pts_3d) {
+            // src-coordinate
+            cv::Mat pt_3d;
+            if(direction == 1) {
+              const float x = _pt_3d.x;
+              const float y = _pt_3d.y;
+              const float z = _pt_3d.z;
+              cv::Mat _pt_3d = (cv::Mat_<float>(4,1) << x,
+                                                        y,
+                                                        z,
+                                                        1.0);
+              pt_3d = base_pose * _pt_3d;
+            }
+            else if(direction == -1){
+              const float x = _pt_3d.x;
+              const float y = _pt_3d.y;
+              const float z = _pt_3d.z;
+              cv::Mat _pt_3d = (cv::Mat_<float>(4,1) << x,
+                                                        y,
+                                                        z,
+                                                        1.0);
+              pt_3d = base_pose * _pt_3d;
+            }
+            else {
+              std::cout << "[WARNING] Critical !!!!!!!!!!" << std::endl;
+            }
+            MapPoint mappoint(pt_3d.at<float>(0),pt_3d.at<float>(1),pt_3d.at<float>(2)); 
+            cv::Mat desc = ChooseDescriptor(src_frame, dst_frame, mappoint.GetPosition(), v_matches[_i]);
             mappoint.SetDescriptor(desc);
             std::vector<MatchInfo> v_match_info(2);
             v_match_info[0] = MatchInfo{src_frame.m_id, v_matches[_i].queryIdx};
@@ -358,10 +398,10 @@ namespace TS_SfM {
             ++_i;
           }
 
-          if(!vb_initialized[src_frame_idx])
-            v_keyframes[src_frame_idx] = KeyFrame(src_frame);
           if(!vb_initialized[dst_frame_idx])
             v_keyframes[dst_frame_idx] = KeyFrame(dst_frame);
+          if(!vb_initialized[src_frame_idx])
+            v_keyframes[src_frame_idx] = KeyFrame(src_frame);
 
           if(direction == 1)
             vb_initialized[dst_frame_idx] = true;
@@ -370,7 +410,7 @@ namespace TS_SfM {
 
           // Optimization would be processed here.
           {
-             BAResult result = BundleAdjustmentBeta(v_keyframes, v_mappoints, m_camera);
+             // BAResult result = BundleAdjustmentBeta(v_keyframes, v_mappoints, m_camera);
           }
         }
       }
