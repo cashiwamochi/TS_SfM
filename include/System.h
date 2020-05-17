@@ -35,7 +35,7 @@ namespace TS_SfM {
 
       // Those pointers are used globally in TS_SfM::System
       std::unique_ptr<Reconstructor> m_p_reconstructor;
-      std::shared_ptr<Map> m_p_map;
+      std::shared_ptr<Map> m_p_map; // this is referenced from viewer and constructor instert infomation.
       std::unique_ptr<Viewer> m_p_viewer;
 
       void InitializeFrames(std::vector<Frame>& v_frames, const int num_frames_in_initial_map = 6);

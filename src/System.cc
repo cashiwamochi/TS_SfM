@@ -381,7 +381,6 @@ namespace TS_SfM {
             }
           }
 
-
           int _i = 0;
           for(cv::Point3f _pt_3d : v_pts_3d) {
             // src-coordinate

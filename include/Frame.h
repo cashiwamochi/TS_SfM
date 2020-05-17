@@ -57,6 +57,9 @@ namespace TS_SfM {
           m_v_matches_to_new.push_back(Match{match.queryIdx, match.trainIdx});
         }
       };
+      inline bool IsEmpty() {
+        return m_m_image.empty();
+      };
 
 
     private:
