@@ -22,17 +22,7 @@ IF (OpenCV_FOUND)
   message([OpenCV_LIBRARIES]: ${OpenCV_LIBRARIES})
 ENDIF()
 
-set(Open3D_DIR ~/.local/Open3D_1/lib/cmake/Open3D/)
-find_package(Open3D REQUIRED)
-IF (Open3D_FOUND)
-  list(APPEND Open3D_LIBRARIES dl)
-  message([Open3D_VER]: ${Open3D_VERSION})
-  message([Open3D_INCLUDE_DIRS]: ${Open3D_INCLUDE_DIRS})
-  message([Open3D_LIBRARY_DIRS]: ${Open3D_LIBRARY_DIRS})
-  message([Open3D_LIBRARIES]: ${Open3D_LIBRARIES})
-ENDIF()
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Open3D_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
 find_package(Cholmod REQUIRED)
 find_package(BLAS)
@@ -43,16 +33,14 @@ set(G2O_ROOT ${CMAKE_SOURCE_DIR}/thirdparty/g2o)
 include_directories(
   ${PROJECT_SOURCE_DIR}/include
   ${OpenCV_INCLUDE_DIRS}
-  ${Open3D_INCLUDE_DIRS}
   ${CHOLMOD_INCLUDE_DIR}
   ${G2O_ROOT}
   ${G2O_ROOT}/build # for g2o/config.h
-  /usr/inluce/eigen3
+  /usr/include/eigen3
 )
 
 link_directories(
   ${G2O_ROOT}/lib
-  ${Open3D_LIBRARY_DIRS}
 )
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
@@ -80,7 +68,6 @@ add_library(
 target_link_libraries(
   ${PROJECT_NAME}
   ${OpenCV_LIBRARIES}
-  ${Open3D_LIBRARIES}
   libg2o_types_data.so
   libg2o_core.so
   libg2o_solver_cholmod.so

@@ -260,7 +260,7 @@ namespace TS_SfM {
 
       {
          BAResult result = BundleAdjustmentBeta(v_keyframes, v_mappoints, m_camera);
-#if 1
+#if 0
         {
           using namespace open3d;
 

@@ -5,7 +5,8 @@
 
 #include <Eigen/Core>
 
-#include <Open3D/Open3D.h>
+#include <Eigen/Dense>
+// #include <Open3D/Open3D.h>
 
 using Matrix33f = Eigen::Matrix<float,3,3>;
 using Matrix34f = Eigen::Matrix<float,3,4>;
