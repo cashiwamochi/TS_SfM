@@ -73,6 +73,10 @@ namespace TS_SfM {
         return m_v_match_info[idx];
       }
 
+      double x() { return m_pos.x; }
+      double y() { return m_pos.y; }
+      double z() { return m_pos.z; }
+
 
     private:
       cv::Point3f m_pos;

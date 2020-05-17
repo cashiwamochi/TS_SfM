@@ -35,6 +35,7 @@ namespace TS_SfM {
     }
     return;
   }
+
 namespace Solver {
 
     using SvdInEight1st = Eigen::JacobiSVD< Eigen::Matrix<float,8,9>,Eigen::ColPivHouseholderQRPreconditioner>;
@@ -84,9 +85,10 @@ namespace Solver {
                                 const std::vector<cv::Point2f>& pts1,
                                 cv::Mat& F);
 
-  cv::Mat SolvePnP(const std::vector<cv::KeyPoint>& v_pts0,
-                   const std::vector<cv::KeyPoint>& v_pts1,
-                   const std::vector<cv::DMatch>& v_matches_01,
+  // cv::Mat SolvePnPRANSAC(const std:;vector<KeyPoint>w
+
+  cv::Mat SolvePnP(const std::vector<cv::Point3f>& v_landmarks_w,
+                   const std::vector<cv::Point2f>& v_obs_pts_c,
                    const cv::Mat& K);
 
 }; // Solver namespace
@@ -129,10 +131,4 @@ namespace Solver {
 
     return distance/8.0;
   };
-
-  float
-    Solver::ComputeEightPointsAlgorithm(const std::vector<cv::Point2f>& pts0,
-                                        const std::vector<cv::Point2f>& pts1,
-                                        cv::Mat& F);
-
 };

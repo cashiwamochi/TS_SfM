@@ -260,6 +260,25 @@ namespace TS_SfM {
 
       {
          BAResult result = BundleAdjustmentBeta(v_keyframes, v_mappoints, m_camera);
+#if 1
+        {
+          using namespace open3d;
+
+          utility::SetVerbosityLevel(utility::VerbosityLevel::Debug);
+
+          auto cloud_ptr = std::make_shared<geometry::PointCloud>();
+          std::vector<Eigen::Vector3d> vd_points;
+          vd_points.reserve((int)v_mappoints.size());
+          for(auto mpt : v_mappoints) {
+            Eigen::Vector3d _mpt(mpt.x(), mpt.y(), mpt.z());
+            vd_points.push_back(_mpt);
+          }
+          cloud_ptr->points_ = vd_points;
+          cloud_ptr->NormalizeNormals();
+          visualization::DrawGeometries({cloud_ptr}, "pointcloud", 1600, 900);
+          utility::LogInfo("end of the test.\n");
+        }
+#endif
       }
     }
 
