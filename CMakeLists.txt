@@ -4,10 +4,15 @@ project(ST_SfM)
 
 set(CMAKE_CXX_COMPILER g++)
 
+if(UNIX)
+  add_definitions(-DUNIX)
+  message(STATUS "Compiling on Unix")
+endif(UNIX)
+
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -O2")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++14 -O2")
 
-list(APPEND CMAKE_MODULE_PATH ~/source/g2o/cmake_modules)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/thirdparty/g2o/cmake_modules)
 
 set(OpenCV_DIR ~/.local/OpenCV410/lib/cmake/opencv4/)
 find_package(OpenCV REQUIRED)
@@ -17,7 +22,6 @@ IF (OpenCV_FOUND)
   message([OpenCV_LIBRARIES]: ${OpenCV_LIBRARIES})
 ENDIF()
 
-# set(Open3D_DIR ~/.local/Open3D/lib/cmake/Open3D/)
 set(Open3D_DIR ~/.local/Open3D_1/lib/cmake/Open3D/)
 find_package(Open3D REQUIRED)
 IF (Open3D_FOUND)
@@ -35,13 +39,14 @@ find_package(BLAS)
 find_package(LAPACK)
 find_package(CSparse)
 
-set(G2O_ROOT ~/.local/g2o)
+set(G2O_ROOT ${CMAKE_SOURCE_DIR}/thirdparty/g2o)
 include_directories(
   ${PROJECT_SOURCE_DIR}/include
-  ${CHOLMOD_INCLUDE_DIR}
   ${OpenCV_INCLUDE_DIRS}
   ${Open3D_INCLUDE_DIRS}
-  ${G2O_ROOT}/include
+  ${CHOLMOD_INCLUDE_DIR}
+  ${G2O_ROOT}
+  ${G2O_ROOT}/build # for g2o/config.h
   /usr/inluce/eigen3
 )
 
