@@ -24,20 +24,25 @@ namespace TS_SfM {
     m_camera = _pair_config.second;
     
     m_vstr_image_names = ConfigLoader::ReadImagesInDir(m_config.str_path_to_images);
-    m_vm_images = ConfigLoader::LoadImages(m_vstr_image_names);
+    const cv::Mat m_image = ConfigLoader::LoadImage(m_vstr_image_names[0]);
 
     if (m_camera.f_cx < 1.0) {
-      m_camera.f_cx *= (float)m_vm_images[0].rows; 
+      m_camera.f_cx *= (float)m_image.rows; 
     }
     if (m_camera.f_cy < 1.0) {
-      m_camera.f_cy *= (float)m_vm_images[0].cols; 
+      m_camera.f_cy *= (float)m_image.cols; 
     }
 
-    m_image_width = m_vm_images[0].cols;
-    m_image_height = m_vm_images[0].rows;
+    m_image_width = m_image.cols;
+    m_image_height = m_image.rows;
 
     ShowConfig();
-    m_v_frames.reserve((int)m_vm_images.size()); 
+    m_v_frames.reserve((int)m_vstr_image_names.size()); 
+
+    for(size_t i = 0; i < m_vstr_image_names.size(); ++i) {
+      Frame frame(i, m_vstr_image_names[i]); 
+      m_v_frames.push_back(frame);
+    }
 
     // Matcher::MatcherConfig m_matcher_config = ConfigLoader::LoadMatcherConfig(str_config_file);  
     m_p_extractor.reset(new KPExtractor(m_image_width, m_image_height,
@@ -88,12 +93,11 @@ namespace TS_SfM {
     return;
   }
 
-  void System::InitializeFrames(std::vector<Frame>& v_frames, std::vector<cv::Mat>& vm_images,
-                                const std::shared_ptr<KPExtractor>& p_extractor)
+  void System::InitializeFrames(std::vector<Frame>& v_frames, const int num_frames_in_initial_map)
   {
-    for (size_t i = 0; i < vm_images.size(); i++) {
-      Frame frame(i, vm_images[i], p_extractor); 
-      v_frames.push_back(frame);
+    for (int i = 0; i < num_frames_in_initial_map; i++) {
+      bool isOK = false;
+      m_p_extractor = v_frames[i].Initialize(std::move(m_p_extractor), isOK);
     }
     std::cout << " Done. " << std::endl;
 
@@ -471,7 +475,7 @@ namespace TS_SfM {
               << "Start Processing ..."
               << std::endl;
 
-    InitializeFrames(m_v_frames, m_vm_images, m_p_extractor);
+    InitializeFrames(m_v_frames, 6);
 
     std::vector<std::reference_wrapper<Frame>> 
       v_ini_frames{m_v_frames[0], m_v_frames[1],m_v_frames[2],m_v_frames[3],m_v_frames[4],m_v_frames[5]};

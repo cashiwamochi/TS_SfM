@@ -31,15 +31,14 @@ namespace TS_SfM {
       std::vector<cv::Mat> m_vm_images; 
       std::vector<Frame> m_v_frames; 
   
-      std::shared_ptr<KPExtractor> m_p_extractor;
+      std::unique_ptr<KPExtractor> m_p_extractor;
 
       // Those pointers are used globally in TS_SfM::System
       std::unique_ptr<Reconstructor> m_p_reconstructor;
       std::shared_ptr<Map> m_p_map;
       std::unique_ptr<Viewer> m_p_viewer;
 
-      void InitializeFrames(std::vector<Frame>& v_frames, std::vector<cv::Mat>& vm_images,
-                            const std::shared_ptr<KPExtractor>& p_extractor);
+      void InitializeFrames(std::vector<Frame>& v_frames, const int num_frames_in_initial_map = 6);
       int InitializeGlobalMap(std::vector<std::reference_wrapper<Frame>>& v_frames);
       int FlexibleInitializeGlobalMap(std::vector<std::reference_wrapper<Frame>>& v_frames);
 

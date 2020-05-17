@@ -2,6 +2,12 @@
 #include "KPExtractor.h"
 
 namespace TS_SfM {
+  Frame::Frame(const int id, const std::string str_path)
+    : m_id(id), m_str_path(str_path)
+  {
+    // Just keep id and info for imread
+  }
+#if 0
   Frame::Frame(const int id, const cv::Mat& m_image, 
                const std::shared_ptr<KPExtractor>& p_extractor)
     : m_id(id), m_m_image(m_image)
@@ -71,11 +77,7 @@ namespace TS_SfM {
 #endif
 
   }
-
-  Frame::Frame()
-    : m_id(0), m_m_image(cv::Mat::zeros(3,3,CV_8UC1))
-  {
-  }
+#endif
 
   Frame::~Frame() {
   }
@@ -126,6 +128,77 @@ namespace TS_SfM {
     Frame::GetGridKpIdx() const
   {
     return m_vvv_grid_kp_idx;
+  }
+
+  std::unique_ptr<KPExtractor> Frame::Initialize(std::unique_ptr<KPExtractor> p_extractor, bool& isOK) {
+    m_m_image = cv::imread(m_str_path, 1);
+    p_extractor->ExtractFeaturePoints(m_m_image, m_v_kpts, m_m_descriptors);
+
+    // std::cout << "[LOG.Frame.FeaturePoints] "
+    //           << m_m_descriptors.rows
+    //           << std::endl;
+
+    std::vector<std::vector<std::pair<cv::Point2f,cv::Point2f>>>
+      vvpair_grid_corners = p_extractor->GetGrids();
+
+#if 0
+    for(auto v : vvpair_grid_corners) {
+      for(auto p : v) {
+        std::cout << p.first.x << ":" << p.first.y << std::endl; 
+        std::cout << p.second.x << ":" << p.second.y << std::endl; 
+        std::cout << "-----------------------------" << std::endl; 
+      } 
+    }
+#endif
+
+    m_vv_num_grid_kpts = p_extractor->DistributeToGrids(m_v_kpts, m_m_descriptors,
+                                                        m_vvv_grid_kpts, m_vvm_grid_descs,
+                                                        m_vvv_grid_kp_idx);
+
+    m_num_assigned_kps = 0;
+    for(auto v : m_vv_num_grid_kpts) 
+      for(auto n : v) 
+        m_num_assigned_kps += n;
+
+    // Remain keypoints which are assigned to grids
+    m_v_kpts.clear();
+    m_v_kpts.reserve(m_num_assigned_kps);
+
+    int _length = m_m_descriptors.cols;
+    auto _type = m_m_descriptors.type();
+    m_m_descriptors.release();
+    m_m_descriptors = cv::Mat::zeros(m_num_assigned_kps, _length, _type); 
+
+    int copy_idx = 0;
+    for(int row = 0; row < (int)p_extractor->GetGridSize().first; row++) {
+      for(int col = 0; col < (int)p_extractor->GetGridSize().second; col++) {
+        for(int idx = 0; idx < (int)m_vv_num_grid_kpts[row][col]; idx++) {
+          m_v_kpts.push_back(m_vvv_grid_kpts[row][col][idx]); 
+          m_vvm_grid_descs[row][col].row(idx).copyTo(m_m_descriptors.row(copy_idx)); 
+          copy_idx++;
+          // std::cout << copy_idx << " : " << m_num_assigned_kps << std::endl;
+        } 
+      } 
+    }
+    
+#if 0
+    for(auto v : m_vv_num_grid_kpts) {
+      for(auto num : v) {
+        std::cout << num << std::endl; 
+        std::cout << "-----------------------------" << std::endl; 
+      } 
+    }
+#endif
+
+#if 0
+    std::cout << "[LOG.Frame.AssingedFeaturePoints] "
+              << m_num_assigned_kps
+              << std::endl;
+#endif
+
+    isOK = true;
+
+    return std::move(p_extractor);
   }
 
   void Frame::ShowFeaturePoints() {

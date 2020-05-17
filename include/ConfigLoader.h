@@ -32,7 +32,7 @@ namespace TS_SfM {
   namespace ConfigLoader {
     std::pair<SystemConfig, Camera> LoadConfig(const std::string str_config_file);
     std::vector<std::string> ReadImagesInDir(const std::string& path_to_images);
-    std::vector<cv::Mat> LoadImages(const std::vector<std::string>& vstr_image_names);
+    cv::Mat LoadImage(const std::string str_image_name);
     Tracker::TrackerConfig LoadTrackerConfig(const std::string str_config_file);
     Mapper::MapperConfig LoadMapperConfig(const std::string str_config_file);
     LoopClosure::LoopConfig LoadLoopConfig(const std::string str_config_file);

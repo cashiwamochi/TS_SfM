@@ -57,16 +57,9 @@ std::vector<std::string> ConfigLoader::ReadImagesInDir(const std::string& str_pa
 }
 
 
-std::vector<cv::Mat> ConfigLoader::LoadImages(const std::vector<std::string>& vstr_image_names) {
-  std::vector<cv::Mat> vm_images;
-  vm_images.reserve((int)vstr_image_names.size());
-
-  for(auto str_image_name : vstr_image_names) {
-    cv::Mat image = cv::imread(str_image_name, 1);
-    vm_images.push_back(image); 
-  }
-
-  return vm_images;
+cv::Mat ConfigLoader::LoadImage(const std::string str_image_name) {
+  cv::Mat m_image = cv::imread(str_image_name, 1);
+  return m_image;
 }
 
 Tracker::TrackerConfig ConfigLoader::LoadTrackerConfig(const std::string str_config_file) {

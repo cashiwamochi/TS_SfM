@@ -13,14 +13,17 @@ namespace TS_SfM {
       int dst_idx;
     };
     public:
+#if 0
       Frame(const int id, const cv::Mat& m_image, const std::shared_ptr<KPExtractor>& p_extractor);
-      Frame();
+#endif
+      Frame(const int id, const std::string path);
       ~Frame();
 
       void ShowFeaturePoints();
       void ShowFeaturePointsInGrids();
 
       const int m_id;
+      const std::string m_str_path;
 
       cv::Mat GetDescriptors() const; 
       std::vector<cv::KeyPoint> GetKeyPoints() const;
@@ -31,6 +34,8 @@ namespace TS_SfM {
       std::vector<std::vector<unsigned int>> GetGridKeyPointsNum() const;
       std::vector<std::vector<std::vector<int>>> GetGridKpIdx() const;
       unsigned int GetAssignedKeyPointsNum() const;
+
+      std::unique_ptr<KPExtractor> Initialize(std::unique_ptr<KPExtractor> p_extractor, bool& isOK);
 
       void SetPose (const cv::Mat& _cTw) {
         m_m_cTw = _cTw.clone();
@@ -55,7 +60,7 @@ namespace TS_SfM {
 
 
     private:
-      const cv::Mat m_m_image;
+      cv::Mat m_m_image;
       bool m_is_key;
       cv::Mat m_m_cTw; // (3 x 4, CV_F32C1)
       cv::Mat m_m_wTc; // (3 x 4, CV_F32C1)

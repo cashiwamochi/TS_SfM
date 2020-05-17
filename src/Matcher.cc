@@ -37,7 +37,7 @@ namespace TS_SfM {
           break;
       } 
 
-      if(false) {
+      if(true) {
         ShowMatches(frame0,frame1,v_matches);
       }
 
