@@ -9,9 +9,6 @@ if(UNIX)
   message(STATUS "Compiling on Unix")
 endif(UNIX)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -O2")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++14 -O2")
-
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/thirdparty/g2o/cmake_modules)
 
 set(OpenCV_DIR ~/.local/OpenCV410/lib/cmake/opencv4/)
@@ -30,12 +27,17 @@ find_package(LAPACK)
 find_package(CSparse)
 
 set(G2O_ROOT ${CMAKE_SOURCE_DIR}/thirdparty/g2o)
+set(IMGUI_ROOT ${CMAKE_SOURCE_DIR}/thirdparty/imgui)
 include_directories(
   ${PROJECT_SOURCE_DIR}/include
   ${OpenCV_INCLUDE_DIRS}
   ${CHOLMOD_INCLUDE_DIR}
   ${G2O_ROOT}
   ${G2O_ROOT}/build # for g2o/config.h
+  ${IMGUI_ROOT}
+  ${IMGUI_ROOT}/examples
+  ${IMGUI_ROOT}/examples/libs/gl3w
+  ${IMGUI_ROOT}/examples/libs/glfw
   /usr/include/eigen3
 )
 
@@ -43,7 +45,38 @@ link_directories(
   ${G2O_ROOT}/lib
 )
 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -Wall -O2 -DIMGUI_IMPL_OPENGL_LOADER_GL3W")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wall -std=c++14 -O2 -DIMGUI_IMPL_OPENGL_LOADER_GL3W") 
+
+
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
+
+add_library(
+  ImGui STATIC
+  ${IMGUI_ROOT}/imconfig.h
+  ${IMGUI_ROOT}/imgui_demo.cpp
+  ${IMGUI_ROOT}/imgui_draw.cpp
+  ${IMGUI_ROOT}/examples/imgui_impl_glfw.cpp
+  ${IMGUI_ROOT}/examples/imgui_impl_glfw.h
+  ${IMGUI_ROOT}/examples/imgui_impl_opengl3.cpp
+  ${IMGUI_ROOT}/examples/imgui_impl_opengl3.h
+  ${IMGUI_ROOT}/examples/libs/gl3w/GL/gl3w.c 
+  ${IMGUI_ROOT}/examples/libs/glfw/include/GLFW/glfw3.h
+  ${IMGUI_ROOT}/imgui_internal.h
+  ${IMGUI_ROOT}/imgui_widgets.cpp
+  ${IMGUI_ROOT}/imgui.cpp
+  ${IMGUI_ROOT}/imgui.h
+  ${IMGUI_ROOT}/imstb_rectpack.h
+  ${IMGUI_ROOT}/imstb_textedit.h
+  ${IMGUI_ROOT}/imstb_truetype.h
+)
+
+target_link_libraries(
+  ImGui
+  glfw
+  GL
+  ${CMAKE_DL_LIBS}
+)
 
 add_library(
   ${PROJECT_NAME} STATIC
@@ -80,6 +113,7 @@ target_link_libraries(
   libg2o_stuff.so
   libg2o_types_slam3d.so
   ${CHOLMOD_LIBRARIES}
+  ImGui
 )
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/build/bin)

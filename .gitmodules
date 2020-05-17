@@ -2,3 +2,7 @@
 	path = thirdparty/g2o
 	url = git@github.com:RainerKuemmerle/g2o.git
   ignore = dirty
+[submodule "thirdparty/imgui"]
+	path = thirdparty/imgui
+	url = git@github.com:ocornut/imgui.git
+  ignore = dirty

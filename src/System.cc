@@ -45,6 +45,7 @@ namespace TS_SfM {
 
     m_p_map = std::make_shared<Map>();
     m_p_reconstructor.reset(new Reconstructor(str_config_file));
+    m_p_viewer.reset(new Viewer());
   }
 
   System::~System() {
@@ -479,6 +480,12 @@ namespace TS_SfM {
 #else
     FlexibleInitializeGlobalMap(v_ini_frames);
 #endif
+
+    std::cout << "=============================" << std::endl;
+    if (m_p_viewer->Run() != 0) {
+      std::cout << "[LOG] Viewer is broken" << std::endl;
+    }
+
     std::cout << "=============================" << std::endl;
     std::cout << std::endl;
     return;

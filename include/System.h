@@ -13,6 +13,8 @@ namespace TS_SfM {
 
   class Matcher;
 
+  class Viewer;
+
   class System{
     public:
       System(const std::string& str_config_file);
@@ -34,6 +36,7 @@ namespace TS_SfM {
       // Those pointers are used globally in TS_SfM::System
       std::unique_ptr<Reconstructor> m_p_reconstructor;
       std::shared_ptr<Map> m_p_map;
+      std::unique_ptr<Viewer> m_p_viewer;
 
       void InitializeFrames(std::vector<Frame>& v_frames, std::vector<cv::Mat>& vm_images,
                             const std::shared_ptr<KPExtractor>& p_extractor);

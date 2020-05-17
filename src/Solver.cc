@@ -264,20 +264,6 @@ namespace Solver {
       reconst_num_in_front_cam = count;
     }
 
-#if 0
-    {
-      using namespace open3d;
-
-      utility::SetVerbosityLevel(utility::VerbosityLevel::Debug);
-
-      auto cloud_ptr = std::make_shared<geometry::PointCloud>();
-      cloud_ptr->points_ = vd_points;
-      cloud_ptr->NormalizeNormals();
-      visualization::DrawGeometries({cloud_ptr}, "pointcloud", 1600, 900);
-      utility::LogInfo("end of the test.\n");
-    }
-#endif
-
     for(auto pt : vd_points) {
       v_pt3D.push_back(cv::Point3f((float)pt.x(), (float)pt.y(), (float)pt.z()));
     }
