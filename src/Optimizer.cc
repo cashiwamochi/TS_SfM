@@ -25,8 +25,8 @@ bool Optimizer::SetData() {
 
 
 // Firstly i will implement a simple optimizer for verification.
-  BAResult BundleAdjustmentBeta(std::vector<KeyFrame> v_keyframes,
-                                std::vector<MapPoint> v_mappoints, const Camera& cam)
+  BAResult BundleAdjustmentBeta(std::vector<std::reference_wrapper<KeyFrame>> v_keyframes,
+                                std::vector<std::reference_wrapper<MapPoint>> v_mappoints, const Camera& cam)
 {
   BAResult result;
   double error_prior_optimization = 0.0;
@@ -54,29 +54,29 @@ bool Optimizer::SetData() {
   // Set vertex to pose
   std::unordered_map<int, int> keyframeIdToVertexId;
   int v_camera_id = 0;
-  for(KeyFrame keyframe : v_keyframes) {
-    if(!keyframe.IsActivated()) {
+  for(auto keyframe : v_keyframes) {
+    if(!keyframe.get().IsActivated()) {
       continue;
     }
 
     g2o::VertexSE3Expmap* vertex_se3 = new g2o::VertexSE3Expmap();
     vertex_se3->setId(v_camera_id);
-    if(keyframe.m_id == center_frame_idx-1 || keyframe.m_id == center_frame_idx) {
+    if(keyframe.get().m_id == center_frame_idx-1 || keyframe.get().m_id == center_frame_idx) {
       vertex_se3->setFixed(true);
     }
 
     Eigen::Matrix3d rot;
     Eigen::Vector3d t;
-    cv::Mat _t = keyframe.GetPose();
-    cv2eigen(keyframe.GetPoseTrans(), t);
-    cv2eigen(keyframe.GetPoseRot(), rot);
+    cv::Mat _t = keyframe.get().GetPose();
+    cv2eigen(keyframe.get().GetPoseTrans(), t);
+    cv2eigen(keyframe.get().GetPoseRot(), rot);
     Eigen::Quaterniond q(rot);
 
     g2o::SE3Quat pose(q,t);
 
     vertex_se3->setEstimate(pose);
     optimizer.addVertex(vertex_se3);
-    keyframeIdToVertexId[keyframe.m_id] = v_camera_id;
+    keyframeIdToVertexId[keyframe.get().m_id] = v_camera_id;
     ++v_camera_id;
   }
 
@@ -85,23 +85,23 @@ bool Optimizer::SetData() {
   double sum_diff2 = 0;
 
   // Set vertex to point 
-  for (MapPoint mappoint : v_mappoints){
-    if(!mappoint.IsActivated() || mappoint.GetObsNum() < 2) {
+  for (auto mappoint : v_mappoints){
+    if(!mappoint.get().IsActivated() || mappoint.get().GetObsNum() < 2) {
       continue;
     }
 
     g2o::VertexSBAPointXYZ* v_p = new g2o::VertexSBAPointXYZ();
     v_p->setId(v_point_id);
     v_p->setMarginalized(true);
-    v_p->setEstimate(Eigen::Vector3d(mappoint.GetPosition().x,
-                                     mappoint.GetPosition().y,
-                                     mappoint.GetPosition().z));
+    v_p->setEstimate(Eigen::Vector3d(mappoint.get().GetPosition().x,
+                                     mappoint.get().GetPosition().y,
+                                     mappoint.get().GetPosition().z));
 
     optimizer.addVertex(v_p);
     // add edges
-    for(int obs_idx = 0; obs_idx < (int)mappoint.GetObsNum(); ++obs_idx) {
-      MatchInfo m = mappoint.GetMatchInfo(obs_idx);
-      auto pt = v_keyframes[m.frame_id].GetObs(m.kpt_id);
+    for(int obs_idx = 0; obs_idx < (int)mappoint.get().GetObsNum(); ++obs_idx) {
+      MatchInfo m = mappoint.get().GetMatchInfo(obs_idx);
+      auto pt = v_keyframes[m.frame_id].get().GetObs(m.kpt_id);
       Eigen::Vector2d obs(pt.x, pt.y);
 
       g2o::EdgeSE3ProjectXYZ* edge = new g2o::EdgeSE3ProjectXYZ();

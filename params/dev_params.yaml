@@ -38,3 +38,6 @@ Matcher.search_type: Whole # Radius or Grid
 Matcher.search_range: 1 # or 50.0 pixel 
 
 Matcher.epipolar_search: 0 # or 1 
+
+Initializer.num_frames: 6
+Initializer.connect_distance: 3 # should be < num_frame-1

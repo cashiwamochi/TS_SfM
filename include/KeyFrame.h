@@ -24,7 +24,7 @@ namespace TS_SfM {
       cv::Point2f GetObs(const int& kp_id) { return m_v_kpts[kp_id].pt; }
 
       // KeyFrame is activated if only it has pose
-      bool IsActivated() {return m_b_activated;};
+      bool IsActivated() const {return m_b_activated;};
 
     private:
       cv::Mat m_m_image;

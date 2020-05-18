@@ -22,6 +22,8 @@ namespace TS_SfM {
     std::pair<SystemConfig, Camera> _pair_config = ConfigLoader::LoadConfig(str_config_file);  
     m_config = _pair_config.first;
     m_camera = _pair_config.second;
+
+    ConfigLoader::LoadInitializerConfig(m_initializer_config.num_frames, m_initializer_config.connect_distance, str_config_file);
     
     m_vstr_image_names = ConfigLoader::ReadImagesInDir(m_config.str_path_to_images);
     const cv::Mat m_image = ConfigLoader::LoadImage(m_vstr_image_names[0]);
@@ -171,22 +173,27 @@ namespace TS_SfM {
     return num_map_points;
   }
 
-  int System::FlexibleInitializeGlobalMap(std::vector<std::reference_wrapper<Frame>>& v_frames) {
+  System::InitialReconstruction System::FlexibleInitializeGlobalMap(std::vector<std::reference_wrapper<Frame>>& v_frames) {
+    InitialReconstruction result;
     int num_map_points = -1; 
 
     int num_pair_frame = (int)v_frames.size();
 
     Matcher matcher(ConfigLoader::LoadMatcherConfig(m_config_file));
-    std::vector<std::vector<cv::DMatch>> vv_matches;
-    vv_matches.reserve(num_pair_frame);
-    std::vector<std::pair<int,int>> v_pair_frames;
-    v_pair_frames.reserve(num_pair_frame);
+    std::vector<std::vector<std::vector<cv::DMatch>>> vvv_matches;
+    vvv_matches.resize(num_pair_frame);
+    for(int i = 0; i < num_pair_frame; ++i) {
+      vvv_matches[i].resize(num_pair_frame);
+    }
 
-    for(int i = 0; i < (int)v_frames.size()-1; ++i) {
-      int j = i + 1;
-      v_pair_frames.push_back(std::make_pair(i,j));
-      std::vector<cv::DMatch> v_matches_ij = matcher.GetMatches(v_frames[i],v_frames[j]);
-      vv_matches.push_back(v_matches_ij);
+    for(int i = 0; i < (int)vvv_matches.size()-1; ++i) {
+      for(int j = i; j < (int)vvv_matches[i].size(); ++j) {
+        if(i == j) continue;
+        std::vector<cv::DMatch> v_matches_ij = matcher.GetMatches(v_frames[i],v_frames[j]);
+        vvv_matches[i][j] = v_matches_ij;
+        std::vector<cv::DMatch> v_matches_ji = matcher.Inverse(v_matches_ij);
+        vvv_matches[j][i] = v_matches_ji;
+      }
     }
 
     // Compute Fundamental Matrix
@@ -198,7 +205,6 @@ namespace TS_SfM {
 
     std::vector<KeyFrame> v_keyframes(v_frames.size());
     std::vector<MapPoint> v_mappoints;
-    std::vector<bool> vb_initialized(v_frames.size(),false);
 
     // Initialization using 2 views geometry
     // This is initializatio in initialization.
@@ -208,7 +214,7 @@ namespace TS_SfM {
       Frame& src_frame = v_frames[src_frame_idx].get();
       Frame& dst_frame = v_frames[dst_frame_idx].get();
 
-      std::vector<cv::DMatch> v_matches = vv_matches[src_frame_idx];
+      std::vector<cv::DMatch> v_matches = vvv_matches[src_frame_idx][dst_frame_idx];
       cv::Mat mF;
       std::vector<bool> vb_mask;
       int score;
@@ -261,29 +267,11 @@ namespace TS_SfM {
 
       v_keyframes[src_frame_idx] = KeyFrame(src_frame);
       v_keyframes[dst_frame_idx] = KeyFrame(dst_frame);
-      vb_initialized[src_frame_idx] = vb_initialized[dst_frame_idx] = true;
 
       {
-         BAResult result = BundleAdjustmentBeta(v_keyframes, v_mappoints, m_camera);
-#if 0
-        {
-          using namespace open3d;
-
-          utility::SetVerbosityLevel(utility::VerbosityLevel::Debug);
-
-          auto cloud_ptr = std::make_shared<geometry::PointCloud>();
-          std::vector<Eigen::Vector3d> vd_points;
-          vd_points.reserve((int)v_mappoints.size());
-          for(auto mpt : v_mappoints) {
-            Eigen::Vector3d _mpt(mpt.x(), mpt.y(), mpt.z());
-            vd_points.push_back(_mpt);
-          }
-          cloud_ptr->points_ = vd_points;
-          cloud_ptr->NormalizeNormals();
-          visualization::DrawGeometries({cloud_ptr}, "pointcloud", 1600, 900);
-          utility::LogInfo("end of the test.\n");
-        }
-#endif
+        std::vector<std::reference_wrapper<KeyFrame>> ref_v_keyframes(v_keyframes.begin(), v_keyframes.end());
+        std::vector<std::reference_wrapper<MapPoint>> ref_v_mappoints(v_mappoints.begin(), v_mappoints.end());
+         BAResult result = BundleAdjustmentBeta(ref_v_keyframes, ref_v_mappoints, m_camera);
       }
     }
 
@@ -297,150 +285,181 @@ namespace TS_SfM {
           int dst_frame_idx = src_frame_idx + direction;
           std::cout << src_frame_idx << ":" << dst_frame_idx << std::endl;
           ///////////////////////////////////////////////////////////////////
-          if(dst_frame_idx < src_frame_idx) {
-            std::swap(dst_frame_idx, src_frame_idx);
-          }
 
-          if(CheckIndex(src_frame_idx, dst_frame_idx, vb_initialized, (int)v_frames.size())) {
+          if(CheckIndex(src_frame_idx, dst_frame_idx, v_keyframes, (int)v_frames.size())) {
             is_done = true;
             break;
           } 
 
-          if(vb_initialized[src_frame_idx] && vb_initialized[dst_frame_idx]) {
+          if(v_keyframes[src_frame_idx].IsActivated() && v_keyframes[dst_frame_idx].IsActivated()) {
             // This case was used already.
             continue;
           }
           ///////////////////////////////////////////////////////////////////
-
-          cv::Mat base_pose;
-          if(direction == 1) {
-            base_pose = AppendRow(v_keyframes[src_frame_idx].GetPose());
-            // std::cout << v_keyframes[src_frame_idx].GetPose() << std::endl;
-          }
-          else {
-            base_pose = AppendRow(Inverse3x4(v_keyframes[dst_frame_idx].GetPose()));
-            // std::cout << v_keyframes[dst_frame_idx].GetPose() << std::endl;
-          }
-
-          // std::cout << base_pose << std::endl;
-          // std::cout << "==================" << std::endl;
-
-          Frame& src_frame = v_frames[src_frame_idx].get();
-          Frame& dst_frame = v_frames[dst_frame_idx].get();
-
-          std::vector<cv::DMatch> v_matches = vv_matches[src_frame_idx];
-          cv::Mat mF;
-          std::vector<bool> vb_mask;
-          int score;
-          Solver::SolveEpipolarConstraintRANSAC(src_frame.GetImage(), dst_frame.GetImage(),  
-                                                std::make_pair(src_frame.GetKeyPoints(),dst_frame.GetKeyPoints()),
-                                                v_matches, mF, vb_mask, score);
-
-          std::vector<cv::DMatch> _v_matches = v_matches;
-          v_matches.clear();
-          for(size_t i = 0; i < _v_matches.size(); i++) {
-            if(vb_mask[i])  {
-              v_matches.push_back(_v_matches[i]); 
+          std::vector<std::vector<cv::DMatch>> v_matches_src_to_map;
+          for(size_t idx_kf = 0; idx_kf < v_keyframes.size(); idx_kf++) {
+            if (v_keyframes[idx_kf].IsActivated()) {
+              v_matches_src_to_map.push_back(vvv_matches[src_frame_idx][idx_kf]);
             }
           }
 
-          std::cout << "Score = " << score
-                    << " / " << _v_matches.size() <<  std::endl;
+          IncrementalSfM(v_keyframes, v_mappoints, v_frames[src_frame_idx], v_matches_src_to_map, m_initializer_config);
 
-          if(false) DrawEpiLines(src_frame, dst_frame, v_matches, vb_mask, mF);
-
-          // decompose E
-          cv::Mat mE = mK.t() * mF * mK;
-          cv::Mat T_01 = Solver::DecomposeE(src_frame.GetKeyPoints(), dst_frame.GetKeyPoints(), v_matches, mK, mE);
-          src_frame.SetMatchesToNew(v_matches);
-          dst_frame.SetMatchesToOld(v_matches);
-
-          // Triangulation
-          std::vector<cv::Point3f> v_pts_3d = Solver::Triangulate(src_frame.GetKeyPoints(),
-                                                                  dst_frame.GetKeyPoints(),
-                                                                  v_matches, mK, T_01); 
-
-          if(direction == 1) {
-            // src->dst(uninitialized)
-            if(vb_initialized[src_frame_idx]) {
-              // src_frame.SetPose(cv::Mat::eye(3,4,CV_32FC1));
-              dst_frame.SetPose(T_01 * base_pose);
-            }
-            else {
-              std::cout << "[WARNING::System] Initialization index has a bug" << std::endl;
-            }
-          }
-          else {
-            // src(uninitialized)->dst->base
-            if(vb_initialized[dst_frame_idx]) {
-              // dst_frame.SetPose(cv::Mat::eye(3,4,CV_32FC1));
-              src_frame.SetPose(Inverse3x4(T_01) * base_pose);
-            }
-            else {
-              std::cout << "[WARNING::System] Initialization index has a bug" << std::endl;
-            }
-          }
-
-          int _i = 0;
-          for(cv::Point3f _pt_3d : v_pts_3d) {
-            // src-coordinate
-            cv::Mat pt_3d;
-            if(direction == 1) {
-              const float x = _pt_3d.x;
-              const float y = _pt_3d.y;
-              const float z = _pt_3d.z;
-              cv::Mat _pt_3d = (cv::Mat_<float>(4,1) << x,
-                                                        y,
-                                                        z,
-                                                        1.0);
-              pt_3d = base_pose * _pt_3d;
-            }
-            else if(direction == -1){
-              const float x = _pt_3d.x;
-              const float y = _pt_3d.y;
-              const float z = _pt_3d.z;
-              cv::Mat _pt_3d = (cv::Mat_<float>(4,1) << x,
-                                                        y,
-                                                        z,
-                                                        1.0);
-              pt_3d = base_pose * _pt_3d;
-            }
-            else {
-              std::cout << "[WARNING] Critical !!!!!!!!!!" << std::endl;
-            }
-            MapPoint mappoint(pt_3d.at<float>(0),pt_3d.at<float>(1),pt_3d.at<float>(2)); 
-            cv::Mat desc = ChooseDescriptor(src_frame, dst_frame, mappoint.GetPosition(), v_matches[_i]);
-            mappoint.SetDescriptor(desc);
-            std::vector<MatchInfo> v_match_info(2);
-            v_match_info[0] = MatchInfo{src_frame.m_id, v_matches[_i].queryIdx};
-            v_match_info[1] = MatchInfo{dst_frame.m_id, v_matches[_i].trainIdx};
-            mappoint.SetMatchInfo(v_match_info);
-            if(mappoint.Activate()) {
-              v_mappoints.push_back(mappoint);
-            }
-            ++_i;
-          }
-
-          if(!vb_initialized[dst_frame_idx])
-            v_keyframes[dst_frame_idx] = KeyFrame(dst_frame);
-          if(!vb_initialized[src_frame_idx])
-            v_keyframes[src_frame_idx] = KeyFrame(src_frame);
-
-          if(direction == 1)
-            vb_initialized[dst_frame_idx] = true;
-          else
-            vb_initialized[src_frame_idx] = true;
-
-          // Optimization would be processed here.
-          {
-             BAResult result = BundleAdjustmentBeta(v_keyframes, v_mappoints, m_camera);
-          }
         }
       }
     }
 
-  // Map is initialized here.
-  m_p_map->Initialize(v_keyframes, v_mappoints);
+    // Do initialization using Map build in 2-view reconstruction.
+    // {
+    //   bool is_done = false;
+    //   for(int dist_from_center_to_src = 0; !is_done ;dist_from_center_to_src++) {
+    //     const std::vector<int> v_direction = {1,-1}; // forward and backward
+    //     for(int direction : v_direction) {
+    //       int src_frame_idx = direction*dist_from_center_to_src + center_frame_idx;
+    //       int dst_frame_idx = src_frame_idx + direction;
+    //       std::cout << src_frame_idx << ":" << dst_frame_idx << std::endl;
+    //       ///////////////////////////////////////////////////////////////////
+    //       if(dst_frame_idx < src_frame_idx) {
+    //         std::swap(dst_frame_idx, src_frame_idx);
+    //       }
+    // 
+    //       if(CheckIndex(src_frame_idx, dst_frame_idx, vb_initialized, (int)v_frames.size())) {
+    //         is_done = true;
+    //         break;
+    //       } 
+    // 
+    //       if(vb_initialized[src_frame_idx] && vb_initialized[dst_frame_idx]) {
+    //         // This case was used already.
+    //         continue;
+    //       }
+    //       ///////////////////////////////////////////////////////////////////
+    // 
+    //       cv::Mat base_pose;
+    //       if(direction == 1) {
+    //         base_pose = AppendRow(v_keyframes[src_frame_idx].GetPose());
+    //         // std::cout << v_keyframes[src_frame_idx].GetPose() << std::endl;
+    //       }
+    //       else {
+    //         base_pose = AppendRow(Inverse3x4(v_keyframes[dst_frame_idx].GetPose()));
+    //         // std::cout << v_keyframes[dst_frame_idx].GetPose() << std::endl;
+    //       }
+    // 
+    //       // std::cout << base_pose << std::endl;
+    //       // std::cout << "==================" << std::endl;
+    // 
+    //       Frame& src_frame = v_frames[src_frame_idx].get();
+    //       Frame& dst_frame = v_frames[dst_frame_idx].get();
+    // 
+    //       std::vector<cv::DMatch> v_matches = vv_matches[src_frame_idx];
+    //       cv::Mat mF;
+    //       std::vector<bool> vb_mask;
+    //       int score;
+    //       Solver::SolveEpipolarConstraintRANSAC(src_frame.GetImage(), dst_frame.GetImage(),  
+    //                                             std::make_pair(src_frame.GetKeyPoints(),dst_frame.GetKeyPoints()),
+    //                                             v_matches, mF, vb_mask, score);
+    // 
+    //       std::vector<cv::DMatch> _v_matches = v_matches;
+    //       v_matches.clear();
+    //       for(size_t i = 0; i < _v_matches.size(); i++) {
+    //         if(vb_mask[i])  {
+    //           v_matches.push_back(_v_matches[i]); 
+    //         }
+    //       }
+    // 
+    //       std::cout << "Score = " << score
+    //                 << " / " << _v_matches.size() <<  std::endl;
+    // 
+    //       if(false) DrawEpiLines(src_frame, dst_frame, v_matches, vb_mask, mF);
+    // 
+    //       // decompose E
+    //       cv::Mat mE = mK.t() * mF * mK;
+    //       cv::Mat T_01 = Solver::DecomposeE(src_frame.GetKeyPoints(), dst_frame.GetKeyPoints(), v_matches, mK, mE);
+    //       src_frame.SetMatchesToNew(v_matches);
+    //       dst_frame.SetMatchesToOld(v_matches);
+    // 
+    //       // Triangulation
+    //       std::vector<cv::Point3f> v_pts_3d = Solver::Triangulate(src_frame.GetKeyPoints(),
+    //                                                               dst_frame.GetKeyPoints(),
+    //                                                               v_matches, mK, T_01); 
+    // 
+    //       if(direction == 1) {
+    //         // src->dst(uninitialized)
+    //         if(vb_initialized[src_frame_idx]) {
+    //           // src_frame.SetPose(cv::Mat::eye(3,4,CV_32FC1));
+    //           dst_frame.SetPose(T_01 * base_pose);
+    //         }
+    //         else {
+    //           std::cout << "[WARNING::System] Initialization index has a bug" << std::endl;
+    //         }
+    //       }
+    //       else {
+    //         // src(uninitialized)->dst->base
+    //         if(vb_initialized[dst_frame_idx]) {
+    //           // dst_frame.SetPose(cv::Mat::eye(3,4,CV_32FC1));
+    //           src_frame.SetPose(Inverse3x4(T_01) * base_pose);
+    //         }
+    //         else {
+    //           std::cout << "[WARNING::System] Initialization index has a bug" << std::endl;
+    //         }
+    //       }
+    // 
+    //       int _i = 0;
+    //       for(cv::Point3f _pt_3d : v_pts_3d) {
+    //         // src-coordinate
+    //         cv::Mat pt_3d;
+    //         if(direction == 1) {
+    //           const float x = _pt_3d.x;
+    //           const float y = _pt_3d.y;
+    //           const float z = _pt_3d.z;
+    //           cv::Mat _pt_3d = (cv::Mat_<float>(4,1) << x,
+    //                                                     y,
+    //                                                     z,
+    //                                                     1.0);
+    //           pt_3d = base_pose * _pt_3d;
+    //         }
+    //         else if(direction == -1){
+    //           const float x = _pt_3d.x;
+    //           const float y = _pt_3d.y;
+    //           const float z = _pt_3d.z;
+    //           cv::Mat _pt_3d = (cv::Mat_<float>(4,1) << x,
+    //                                                     y,
+    //                                                     z,
+    //                                                     1.0);
+    //           pt_3d = base_pose * _pt_3d;
+    //         }
+    //         else {
+    //           std::cout << "[WARNING] Critical !!!!!!!!!!" << std::endl;
+    //         }
+    //         MapPoint mappoint(pt_3d.at<float>(0),pt_3d.at<float>(1),pt_3d.at<float>(2)); 
+    //         cv::Mat desc = ChooseDescriptor(src_frame, dst_frame, mappoint.GetPosition(), v_matches[_i]);
+    //         mappoint.SetDescriptor(desc);
+    //         std::vector<MatchInfo> v_match_info(2);
+    //         v_match_info[0] = MatchInfo{src_frame.m_id, v_matches[_i].queryIdx};
+    //         v_match_info[1] = MatchInfo{dst_frame.m_id, v_matches[_i].trainIdx};
+    //         mappoint.SetMatchInfo(v_match_info);
+    //         if(mappoint.Activate()) {
+    //           v_mappoints.push_back(mappoint);
+    //         }
+    //         ++_i;
+    //       }
+    // 
+    //       if(!vb_initialized[dst_frame_idx])
+    //         v_keyframes[dst_frame_idx] = KeyFrame(dst_frame);
+    //       if(!vb_initialized[src_frame_idx])
+    //         v_keyframes[src_frame_idx] = KeyFrame(src_frame);
+    // 
+    //       if(direction == 1)
+    //         vb_initialized[dst_frame_idx] = true;
+    //       else
+    //         vb_initialized[src_frame_idx] = true;
+    // 
+    //       // Optimization would be processed here.
+    //       {
+    //          BAResult result = BundleAdjustmentBeta(v_keyframes, v_mappoints, m_camera);
+    //       }
+    //     }
+    //   }
+    // }
 
     // Convert frames to keyframes
     // All data should be inserted to Map
@@ -464,24 +483,47 @@ namespace TS_SfM {
     }
 #endif
 
-    return num_map_points;
+    return result;
   }
 
+  int System::IncrementalSfM(std::vector<KeyFrame>& v_keyframes, 
+                     std::vector<MapPoint>& v_mappoints, 
+                     Frame& f,
+                     const std::vector<std::vector<cv::DMatch>>& v_matches,
+                     const InitializerConfig _config) {
 
+    //1. Get matches between map and input frame using matches of keyframes
+
+    //2. SolvePnP
+
+    //3. Perform BundleAdjustment
+
+
+    //Finally, input frame is registered as keyframe and mappoints are inserted to map
+
+    return 0;
+  }
 
   void System::Run() {
     std::cout << "[LOG] " 
               << "Start Processing ..."
               << std::endl;
 
-    InitializeFrames(m_v_frames, 6);
 
-    std::vector<std::reference_wrapper<Frame>> 
-      v_ini_frames{m_v_frames[0], m_v_frames[1],m_v_frames[2],m_v_frames[3],m_v_frames[4],m_v_frames[5]};
+    InitializeFrames(m_v_frames, m_initializer_config.num_frames);
+
+    std::vector<Frame> v_ini_frames; v_ini_frames.reserve(m_initializer_config.num_frames);
+    for(int i = 0; i < m_initializer_config.num_frames; ++i) {
+      v_ini_frames.push_back(m_v_frames[i]);
+    }
 #if 0
     InitializeGlobalMap(v_ini_frames);
 #else
-    FlexibleInitializeGlobalMap(v_ini_frames);
+    std::vector<std::reference_wrapper<Frame>> ref_v_ini_frames(v_ini_frames.begin(), v_ini_frames.end());
+    InitialReconstruction result = FlexibleInitializeGlobalMap(ref_v_ini_frames);
+    // Map is initialized here.
+    m_p_map->Initialize(result.v_keyframes, result.v_mappoints);
+
 #endif
 
     std::cout << "=============================" << std::endl;

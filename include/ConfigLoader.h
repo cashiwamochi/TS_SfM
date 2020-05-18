@@ -38,6 +38,6 @@ namespace TS_SfM {
     LoopClosure::LoopConfig LoadLoopConfig(const std::string str_config_file);
     KPExtractor::ExtractorConfig LoadExtractorConfig(const std::string str_config_file);
     Matcher::MatcherConfig LoadMatcherConfig(const std::string str_config_file);
+    void LoadInitializerConfig(int& num_frames, int& connect_distance, const std::string str_config_file);
   }
-
 }

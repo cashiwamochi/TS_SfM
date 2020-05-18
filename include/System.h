@@ -2,10 +2,13 @@
 
 #include "ConfigLoader.h"
 #include <memory>
+#include <vector>
+#include <string>
 
 namespace TS_SfM {
 
   class Frame;
+  class KeyFrame;
   class KPExtractor;
   class Reconstructor;
   class Map;
@@ -16,6 +19,18 @@ namespace TS_SfM {
   class Viewer;
 
   class System{
+    public:
+      struct InitializerConfig {
+        int num_frames;
+        int connect_distance;
+      };
+
+    private:
+      struct InitialReconstruction {
+        std::vector<KeyFrame> v_keyframes;
+        std::vector<MapPoint> v_mappoints;
+      };
+
     public:
       System(const std::string& str_config_file);
       ~System();
@@ -38,9 +53,16 @@ namespace TS_SfM {
       std::shared_ptr<Map> m_p_map; // this is referenced from viewer and constructor instert infomation.
       std::unique_ptr<Viewer> m_p_viewer;
 
+      InitializerConfig m_initializer_config;
+
       void InitializeFrames(std::vector<Frame>& v_frames, const int num_frames_in_initial_map = 6);
       int InitializeGlobalMap(std::vector<std::reference_wrapper<Frame>>& v_frames);
-      int FlexibleInitializeGlobalMap(std::vector<std::reference_wrapper<Frame>>& v_frames);
+      InitialReconstruction FlexibleInitializeGlobalMap(std::vector<std::reference_wrapper<Frame>>& v_frames);
+      int IncrementalSfM(std::vector<KeyFrame>& v_keyframes, 
+                         std::vector<MapPoint>& v_mappoints,
+                         Frame& f,
+                         const std::vector<std::vector<cv::DMatch>>& v_matches,
+                         const InitializerConfig _config);
 
       void DrawEpiLines(const Frame& f0, const Frame& f1, 
                         const std::vector<cv::DMatch>& v_matches01, const std::vector<bool>& vb_mask,

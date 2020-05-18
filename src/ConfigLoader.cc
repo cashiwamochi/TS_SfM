@@ -78,6 +78,16 @@ Mapper::MapperConfig ConfigLoader::LoadMapperConfig(const std::string str_config
   return mapper_config;
 }
 
+void ConfigLoader::LoadInitializerConfig(int& num_frames, int& connect_distance, const std::string str_config_file) {
+  cv::FileStorage fs_settings(str_config_file, cv::FileStorage::READ);
+  num_frames = fs_settings["Initializer.num_frames"];
+  connect_distance = fs_settings["Initializer.connect_distance"];
+  if(connect_distance > num_frames - 1) {
+    connect_distance = num_frames - 1;
+  }
+  return;
+}
+
 LoopClosure::LoopConfig ConfigLoader::LoadLoopConfig(const std::string str_config_file) {
   cv::FileStorage fs_settings(str_config_file, cv::FileStorage::READ);
   LoopClosure::LoopConfig lc_config;

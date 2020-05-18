@@ -6,11 +6,12 @@
 
 namespace TS_SfM{
   class Frame;
+  class KeyFrame;
   cv::Mat ChooseDescriptor(const Frame& f0, const Frame& f1,
                            const cv::Point3f& p, const cv::DMatch& match);
 
   bool CheckIndex(const int& src_frame_idx, const int& dst_frame_idx,
-      const std::vector<bool>& vb_initialized, const int length);
+      const std::vector<KeyFrame>& v_keyframes, const int length);
 
   Eigen::Vector2d ProjectToImage(const cv::Mat& K, const cv::Mat& cTw, const cv::Point3f& pt);
 

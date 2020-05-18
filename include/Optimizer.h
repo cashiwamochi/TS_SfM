@@ -75,7 +75,7 @@ namespace TS_SfM {
 
   };
 
-  BAResult BundleAdjustmentBeta(std::vector<KeyFrame> v_keyframes,
-                                std::vector<MapPoint> v_mappoints, const Camera& cam);
+  BAResult BundleAdjustmentBeta(std::vector<std::reference_wrapper<KeyFrame>> v_keyframes,
+                                std::vector<std::reference_wrapper<MapPoint>> v_mappoints, const Camera& cam);
 
 };

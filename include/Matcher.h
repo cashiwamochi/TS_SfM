@@ -38,6 +38,16 @@ namespace TS_SfM {
       std::vector<cv::DMatch>
         GetMatches(const Frame& frame0, const Frame& frame1);
 
+      std::vector<cv::DMatch> Inverse(const std::vector<cv::DMatch>& v_matches) {
+        std::vector<cv::DMatch> v_matches_inv = v_matches; 
+        v_matches_inv.reserve(v_matches.size());
+        for(cv::DMatch m : v_matches_inv) {
+          std::swap(m.queryIdx, m.trainIdx);
+          v_matches_inv.push_back(m);
+        }
+        return v_matches_inv;
+      };
+
     private:
       std::unique_ptr<cv::BFMatcher> m_p_matcher;
       const MatcherConfig m_config;
