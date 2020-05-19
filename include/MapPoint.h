@@ -1,15 +1,8 @@
 #pragma once
 
-#include <iostream>
-#include <vector>
-
-#include <opencv2/opencv.hpp>
+#include "Matcher.h"
 
 namespace TS_SfM {
-    struct MatchInfo {
-      int frame_id;
-      int kpt_id;
-    };
 
   class MapPoint {
     public:

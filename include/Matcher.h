@@ -11,6 +11,16 @@ namespace TS_SfM {
   class MapPoint;
   class Frame;
 
+  struct MatchObsAndLdmk {
+    int obs_id;
+    int ldmk_id;
+  };
+
+  struct MatchInfo {
+    int frame_id;
+    int kpt_id;
+  };
+
   class Matcher {
     public:
 

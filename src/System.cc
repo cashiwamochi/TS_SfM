@@ -493,11 +493,15 @@ namespace TS_SfM {
                      const InitializerConfig _config) {
 
     //1. Get matches between map and input frame using matches of keyframes
+    for(size_t kf_idx = 0; kf_idx < v_keyframes.size(); kf_idx++) {
+      if(std::abs((int)kf_idx - f.m_id) == 0 && std::abs((int)kf_idx - f.m_id) > _config.connect_distance) {
+        continue;
+      }
+    }
 
     //2. SolvePnP
 
     //3. Perform BundleAdjustment
-
 
     //Finally, input frame is registered as keyframe and mappoints are inserted to map
 

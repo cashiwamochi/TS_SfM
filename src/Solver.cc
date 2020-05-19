@@ -332,5 +332,16 @@ namespace Solver {
     return cTw;
   }
 
+  cv::Mat SolvePnPRANSAC(const std::vector<cv::KeyPoint>& v_keypoints,
+                         const std::vector<MapPoint>& v_mappoints,
+                         const std::vector<MatchObsAndLdmk>& v_matches,
+                         std::vector<bool> vb_inliers) 
+  {
+    cv::Mat cTw;
+
+
+    return cTw;
+  }
+
 }; // Solver
 }; // TS_SfM

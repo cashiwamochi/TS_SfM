@@ -7,6 +7,8 @@
 namespace TS_SfM {
   class Frame;
 
+  struct MatchInfo;
+
   class KeyFrame{
     public:
       KeyFrame(const Frame& f);

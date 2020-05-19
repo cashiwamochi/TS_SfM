@@ -155,5 +155,4 @@ bool Optimizer::SetData() {
   return result;
 }
 
-
 };

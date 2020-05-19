@@ -37,6 +37,9 @@ namespace TS_SfM {
     return;
   }
 
+  class MapPoint;
+  struct MatchObsAndLdmk;
+
 namespace Solver {
 
     using SvdInEight1st = Eigen::JacobiSVD< Eigen::Matrix<float,8,9>,Eigen::ColPivHouseholderQRPreconditioner>;
@@ -86,7 +89,10 @@ namespace Solver {
                                 const std::vector<cv::Point2f>& pts1,
                                 cv::Mat& F);
 
-  // cv::Mat SolvePnPRANSAC(const std:;vector<KeyPoint>w
+  cv::Mat SolvePnPRANSAC(const std::vector<cv::KeyPoint>& v_keypoints,
+                         const std::vector<MapPoint>& v_mappoints,
+                         const std::vector<MatchObsAndLdmk>& v_matches,
+                         std::vector<bool> vb_inliers);
 
   cv::Mat SolvePnP(const std::vector<cv::Point3f>& v_landmarks_w,
                    const std::vector<cv::Point2f>& v_obs_pts_c,
